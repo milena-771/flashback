@@ -1,0 +1,10 @@
+method§path§tokenName§json
+POST§/retrospectives/create§user§{"retrospectiveName":"Test create retro","startDate":"2030-06-27","endDate":"2030-06-30","description":"x","deviceId":1,"movieId":[1,2,3]}
+PUT§/retrospectives/1§user§{"id":1, "retrospectiveName":"test update retro","startDate":"2030-06-27","endDate":"2030-06-30","description":"test","deviceId":1,"movieId":[1,2,3]}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@test.com","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"p","lastname":"D","email":"pierre.dupont@test.com","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"p","lastname":"D","email":"pierre@t.co","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"p","lastname":"D","email":"pierre-90@T.co","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"p","lastname":"D","email":"9@t.CO","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"p","lastname":"D","email":"pierre.dupont@test.com","password":"B.o-nJ?o_u[@]r!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre_dupont@test.tr","password":"Bonjour!12"}

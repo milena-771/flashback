@@ -1,0 +1,57 @@
+method§path§tokenName§json
+POST§/retrospectives/create§user§{"retrospectiveName":" ","startDate":"2030-06-27","endDate":"2030-06-30","description":"x","deviceId":1,"movieId":[1,2,3]}
+POST§/retrospectives/create§user§{"retrospectiveName":"","startDate":"2030-06-27","endDate":"2030-06-30","description":"x","deviceId":1,"movieId":[1,2,3]}
+POST§/retrospectives/create§user§{"retrospectiveName":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer ac bibendum elit. Duis nulla nulla, pretium eu nunc eget, semper tempus turpis porta ante.","startDate":"2030-06-27","endDate":"2030-06-30","description":"x","deviceId":1,"movieId":[1,2,3]}
+POST§/retrospectives/create§user§{"retrospectiveName":"test pattern @","startDate":"2030-06-27","endDate":"2030-06-30","description":"x","deviceId":1,"movieId":[1,2,3]}
+POST§/retrospectives/create§user§{"retrospectiveName":"test startDate before today","startDate":"2023-06-27","endDate":"2030-06-30","description":"x","deviceId":1,"movieId":[1,2,3]}
+POST§/retrospectives/create§user§{"retrospectiveName":"test endDate before today","startDate":"2030-06-27","endDate":"2023-06-30","description":"x","deviceId":1,"movieId":[1,2,3]}
+POST§/retrospectives/create§user§{"retrospectiveName":"description not blank","startDate":"2030-06-27","endDate":"2030-06-30","description":" ","deviceId":1,"movieId":[1,2,3]}
+POST§/retrospectives/create§user§{"retrospectiveName":"description size 1050 chars","startDate":"2030-06-27","endDate":"2030-06-30","description":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur sit amet nisl non augue posuere mollis sed non nisl. In at dapibus nisl. Fusce vel ornare purus. Nunc scelerisque egestas leo eu eleifend. In convallis, dui id cursus imperdiet, diam augue lobortis tortor, vitae molestie nunc ligula non mauris. Vestibulum turpis odio, efficitur eu libero nec, tempus congue nisl. Aenean tincidunt odio ex, sed malesuada tortor auctor in.Cras gravida dictum mauris non condimentum. Nunc tortor dui, ultrices ac orci eget, commodo dignissim ante. Nunc id maximus metus. Nulla faucibus mauris a justo congue tincidunt. Donec ultricies, lorem nec scelerisque maximus, turpis nunc accumsan quam, eget sollicitudin massa nulla eu ligula. Donec porta justo sit amet lobortis interdum. Morbi dignissim massa mauris, a euismod augue congue at. Etiam at condimentum augue, eget ultrices metus. Aliquam erat volutpat. Suspendisse nisi diam, bibendum id scelerisque dignissim, mollis in mi. Pellentesque finibus eu dolor mollis porttitor. Etiam condimentum nam. ","deviceId":1,"movieId":[1,2,3]}
+POST§/retrospectives/create§user§{"retrospectiveName":"description empty","startDate":"2030-06-27","endDate":"2030-06-30","description":"","deviceId":1,"movieId":[1,2,3]}
+POST§/retrospectives/create§user§{"retrospectiveName":"description pattern","startDate":"2030-06-27","endDate":"2030-06-30","description":"test pattern @","deviceId":1,"movieId":[1,2,3]}
+POST§/retrospectives/create§user§{"retrospectiveName":"movieId null","startDate":"2030-06-27","endDate":"2030-06-30","description":"test","deviceId":1,"movieId":null}
+POST§/retrospectives/create§user§{"retrospectiveName":"deviceId null","startDate":"2030-06-27","endDate":"2030-06-30","description":"test","deviceId":null,"movieId":[1,2,3]}
+POST§/retrospectives/create§user§{"retrospectiveName":"deviceId negative","startDate":"2030-06-27","endDate":"2030-06-30","description":"test","deviceId":-4,"movieId":[1,2,3]}
+POST§/retrospectives/create§user§{"retrospectiveName":"deviceId decimal","startDate":"2030-06-27","endDate":"2030-06-30","description":"test","deviceId":2,4,"movieId":[1,2,3]}
+PUT§/retrospectives/0§user§{"id":1,"retrospectiveName":" ","startDate":"2030-06-27","endDate":"2030-06-30","description":"x","deviceId":1,"movieId":[1,2,3]}
+PUT§/retrospectives/0§user§{"id":1,"retrospectiveName":"","startDate":"2030-06-27","endDate":"2030-06-30","description":"x","deviceId":1,"movieId":[1,2,3]}
+PUT§/retrospectives/0§user§{"id":1,"retrospectiveName":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer ac bibendum elit. Duis nulla nulla, pretium eu nunc eget, semper tempus turpis porta ante.","startDate":"2030-06-27","endDate":"2030-06-30","description":"x","deviceId":1,"movieId":[1,2,3]}
+PUT§/retrospectives/0§user§{"id":1,"retrospectiveName":"test pattern @","startDate":"2030-06-27","endDate":"2030-06-30","description":"x","deviceId":1,"movieId":[1,2,3]}
+PUT§/retrospectives/0§user§{"id":1,"retrospectiveName":"test startDate before today","startDate":"2023-06-27","endDate":"2030-06-30","description":"x","deviceId":1,"movieId":[1,2,3]}
+PUT§/retrospectives/0§user§{"id":1,"retrospectiveName":"test endDate before today","startDate":"2030-06-27","endDate":"2023-06-30","description":"x","deviceId":1,"movieId":[1,2,3]}
+PUT§/retrospectives/0§user§{"id":1,"retrospectiveName":"description not blank","startDate":"2030-06-27","endDate":"2030-06-30","description":" ","deviceId":1,"movieId":[1,2,3]}
+PUT§/retrospectives/0§user§{"id":1,"retrospectiveName":"description size 1050 chars","startDate":"2030-06-27","endDate":"2030-06-30","description":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur sit amet nisl non augue posuere mollis sed non nisl. In at dapibus nisl. Fusce vel ornare purus. Nunc scelerisque egestas leo eu eleifend. In convallis, dui id cursus imperdiet, diam augue lobortis tortor, vitae molestie nunc ligula non mauris. Vestibulum turpis odio, efficitur eu libero nec, tempus congue nisl. Aenean tincidunt odio ex, sed malesuada tortor auctor in.Cras gravida dictum mauris non condimentum. Nunc tortor dui, ultrices ac orci eget, commodo dignissim ante. Nunc id maximus metus. Nulla faucibus mauris a justo congue tincidunt. Donec ultricies, lorem nec scelerisque maximus, turpis nunc accumsan quam, eget sollicitudin massa nulla eu ligula. Donec porta justo sit amet lobortis interdum. Morbi dignissim massa mauris, a euismod augue congue at. Etiam at condimentum augue, eget ultrices metus. Aliquam erat volutpat. Suspendisse nisi diam, bibendum id scelerisque dignissim, mollis in mi. Pellentesque finibus eu dolor mollis porttitor. Etiam condimentum nam. ","deviceId":1,"movieId":[1,2,3]}
+PUT§/retrospectives/0§user§{"id":1,"retrospectiveName":"description empty","startDate":"2030-06-27","endDate":"2030-06-30","description":"","deviceId":1,"movieId":[1,2,3]}
+PUT§/retrospectives/0§user§{"id":1,"retrospectiveName":"description pattern","startDate":"2030-06-27","endDate":"2030-06-30","description":"test pattern @","deviceId":1,"movieId":[1,2,3]}
+PUT§/retrospectives/0§user§{"id":1,"retrospectiveName":"movieId null","startDate":"2030-06-27","endDate":"2030-06-30","description":"test","deviceId":1,"movieId":null}
+PUT§/retrospectives/0§user§{"id":1,"retrospectiveName":"deviceId null","startDate":"2030-06-27","endDate":"2030-06-30","description":"test","deviceId":null,"movieId":[1,2,3]}
+PUT§/retrospectives/0§user§{"id":1,"retrospectiveName":"deviceId negative","startDate":"2030-06-27","endDate":"2030-06-30","description":"test","deviceId":-4,"movieId":[1,2,3]}
+PUT§/retrospectives/0§user§{"id":1,"retrospectiveName":"deviceId decimal","startDate":"2030-06-27","endDate":"2030-06-30","description":"test","deviceId":2,4,"movieId":[1,2,3]}
+POST§/sign-up§anonymous§{"firstname":"","lastname":"Dupont","email":"pierre.dupont@test.com","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":" ","lastname":"Dupont","email":"pierre.dupont@test.com","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"","lastname":"Dupont","email":"pierre.dupont@test.com","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"(pierre)","lastname":"Dupont","email":"pierre.dupont@test.com","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Lorem ipsum dolor sit amet consectetur adipiscing mi","lastname":"Dupont","email":"pierre.dupont@test.com","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":" ","email":"pierre.dupont@test.com","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"","email":"pierre.dupont@test.com","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Lorem ipsum dolor sit amet consectetur adipiscing mi","email":"pierre.dupont@test.com","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont#","email":"pierre.dupont@test.com","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":" ","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":" ","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierreLoremipsumdolorsiametconsecteturadipiscingelitNamurnaodio.dupontelement@testelementumadiamatlaoreet.com","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@test.helloc","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@test.t","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@te6t.tr","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@test","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont.tr","password":"Bonjour!12"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@test.com","password":" "}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@test.com","password":""}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@test.com","password":"iL?10cou"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@test.com","password":"iL.10cou"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@test.com","password":"i"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@test.com","password":"i!Lp%cjK"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@test.com","password":"2!LM%15PO"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@test.com","password":"2!LM%15PO"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@test.com","password":"2!LM%1 5Po"}
+POST§/sign-up§anonymous§{"firstname":"Pierre","lastname":"Dupont","email":"pierre.dupont@test.com","password":"2!LM%15POLoremipsumdolorsitametconsecteturnunc"}

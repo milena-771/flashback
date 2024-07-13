@@ -1,0 +1,204 @@
+:root{
+    --fc-button-bg-color:black;
+    --fc-button-border-color:black;
+    --fc-button-active-border-color: black;
+    --fc-button-hover-bg-color:black;
+    --fc-today-bg-color:rgba(25, 25, 112, 0.15);
+}
+/*Flashback logo*/
+.flash-back{
+    font-size: 2rem;
+}
+/*flashback in headers*/
+.back{
+    font-family: "Libre Baskerville", serif;
+    font-weight: 400;
+    color:blueviolet;
+    font-size: 2rem;
+    font-style: italic;
+}
+.flash{
+    font-family:'Istok Web', sans-serif;
+    font-weight: 400;
+    color:white;
+    font-size: 2rem;
+}
+/*flashback as title*/
+.flashTitle{
+    font-family:'Istok Web', sans-serif;
+    font-weight: 500;
+    color:black;
+    font-size: 3rem;
+}
+.backTitle{
+    font-family: "Libre Baskerville", serif;
+    font-weight: 600;
+    color:blueviolet;
+    font-size: 2.5rem;
+    font-style: italic;
+}
+
+/*Header*/
+.headerShadow{
+    box-shadow: 0px 0px 6px 6px black;
+}
+.nav-item{
+    color:white;
+}
+
+.nav-link{
+    color:white;
+}
+.dropdown-item{
+    color:white;
+}
+.dropdown-menu{
+    background-color: black;
+}
+.nav-link:hover{
+    background-color: black;
+    color: mediumseagreen;
+}
+.dropdown-item:hover{
+    background-color: black;
+    color: mediumseagreen;
+}
+
+h3,h2,h1{
+    font-family:'Istok Web', sans-serif;
+    font-weight: bold;
+}
+
+/*Form*/
+.required::after {
+    content: ' *';
+    color: red;
+}
+
+.form-control:focus{
+    border:3px solid blueviolet;
+    box-shadow: none;
+}
+
+.form-select:focus{
+    border:3px solid blueviolet;
+    box-shadow: none;
+}
+
+.form-select>option:hover{
+    background-color: silver;
+}
+
+/*Buttons*/
+.blackButton{
+    border:1px solid black;
+    background-color: black;
+    color:white;
+}
+.blackButton:hover{
+    border:1px solid black;
+    background-color: white;
+    color:black;
+}
+
+.blackBtnOutline{
+    border:1px solid black;
+    background-color: white;
+    color:black;
+}
+
+.blackBtnOutline:hover{
+    border:1px solid black;
+    background-color: black;
+    color:white;
+}
+
+.flashbackButton{
+    background-color: blueviolet;
+    color:white;
+    border: 1px solid blueviolet;
+}
+
+.flashbackButton:hover{
+    background-color: white;
+    color:blueviolet; 
+    border: 1px solid blueviolet;
+}
+
+.flashbackButton:active{
+    background-color: white;
+    color:blueviolet; 
+    border: 1px solid blueviolet;
+}
+
+.flashbackOutline{
+    background-color: white;
+    color:blueviolet;
+    border: 1px solid blueviolet;
+}
+
+.flashbackOutline:hover{
+    background-color: blueviolet;
+    color:white;
+}
+
+.flashbackOutline:active{
+    background-color: blueviolet;
+    color:white;
+}
+
+.smallBtn{
+    color:black;
+}
+
+.smallBtn:hover{
+    background-color: silver;
+    color:black;
+}
+
+/*Tooltip*/
+.custom-tooltip {
+    --bs-tooltip-bg: var(--bs-danger);
+  }
+
+/*Images*/
+/*width logo no result for user and admin*/
+.noResult{
+    width:3rem;
+}
+
+/*Spinner loading*/
+.spinner-border{
+    width: 3rem; 
+    height: 3rem;
+}
+
+a{
+    color:mediumseagreen;
+}
+a:hover{
+    color:mediumseagreen;
+}
+
+/*Error pages*/
+.darkBg {
+    border:2px solid black;
+    min-height: 100vh;
+    width: auto;
+    background-color: black;
+}
+.errorMsg{
+    color:white;
+}
+.four{
+    width:10%;
+}
+html, body {
+    height: 100%;
+    min-height: 90vh;
+    margin: 0;
+    padding: 0;
+  }
+
+
+
