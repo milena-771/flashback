@@ -2,14 +2,16 @@ package co.simplon.flashback.dtos;
 
 public interface MovieItem {
 
-    Long getId();
+	Long getId();
 
-    String getIsan();
+	String getIsan();
 
-    String getTitle();
+	String getTitle();
 
-    String getPoster();
+	String getPoster();
 
-    int getReleaseYear();
+	int getReleaseYear();
+
+	GenreDetails getGenre();
 
 }

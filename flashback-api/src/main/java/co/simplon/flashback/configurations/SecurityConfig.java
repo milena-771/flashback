@@ -26,83 +26,71 @@ import co.simplon.flashback.services.AuthHelper;
 @EnableMethodSecurity(securedEnabled = true, prePostEnabled = true)
 public class SecurityConfig {
 
-    @Value("${flashback-api.cors.enabled}")
-    private boolean corsEnabled;
+	@Value("${flashback-api.cors.enabled}")
+	private boolean corsEnabled;
 
-    @Value("${flashback-api.auth.rounds}")
-    private int rounds;
+	@Value("${flashback-api.auth.rounds}")
+	private int rounds;
 
-    @Value("${flashback-api.auth.issuer}")
-    private String issuer;
+	@Value("${flashback-api.auth.issuer}")
+	private String issuer;
 
-    @Value("${flashback-api.auth.secret}")
-    private String secret;
+	@Value("${flashback-api.auth.secret}")
+	private String secret;
 
-    @Value("${flashback-api.auth.tokenAccessExp}")
-    private long tokenAccessExpiration;
+	@Value("${flashback-api.auth.tokenAccessExp}")
+	private long tokenAccessExpiration;
 
-    @Bean
-    public AuthHelper authHelper() {
-	Algorithm algorithm = Algorithm.HMAC256(secret);
-	PasswordEncoder encoder = new BCryptPasswordEncoder(
-		rounds);
+	@Bean
+	public AuthHelper authHelper() {
+		Algorithm algorithm = Algorithm.HMAC256(secret);
+		PasswordEncoder encoder = new BCryptPasswordEncoder(rounds);
 
-	return new AuthHelper.Builder().algorithm(algorithm)
-		.passwordEncoder(encoder).issuer(issuer)
-		.expiration(tokenAccessExpiration).build();
-    }
+		return new AuthHelper.Builder().algorithm(algorithm)
+				.passwordEncoder(encoder).issuer(issuer)
+				.expiration(tokenAccessExpiration).build();
+	}
 
-    @Bean
-    SecurityFilterChain filterChain(HttpSecurity http)
-	    throws Exception {
-	http.cors(corsCustomizer())
-		.csrf(csrf -> csrf.disable())
-		.authorizeHttpRequests((authz) -> authz
-			.requestMatchers("/sign-up",
-				"/sign-in", "/")
-			.permitAll()
-			.requestMatchers(
-				"/movies/for-search",
-				"/favorites/**",
-				"/retrospectives/**")
-			.hasRole("USER")
-			.requestMatchers("/admin/**",
-				"/movies",
-				"/movies/for-edit",
-				"/movies/labels",
-				"/movies/{id}")
-			.hasRole("ADMIN").anyRequest()
-			.authenticated())
-		.oauth2ResourceServer((
-			oauth2ResourceServer) -> oauth2ResourceServer
-				.jwt(Customizer
-					.withDefaults()));
-	return http.build();
-    }
+	@Bean
+	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		http.cors(corsCustomizer()).csrf(csrf -> csrf.disable())
+				.authorizeHttpRequests((authz) -> authz
+						.requestMatchers("/sign-up", "/sign-in", "/")
+						.permitAll()
+						.requestMatchers("/movies/for-search",
+								"/movies/by-title", "/movies/by-director",
+								"/movies/by-genre", "/favorites/**",
+								"/retrospectives/**")
+						.hasRole("USER")
+						.requestMatchers("/admin/**", "/movies",
+								"/movies/for-edit", "/movies/labels",
+								"/movies/{id}")
+						.hasRole("ADMIN").anyRequest().authenticated())
+				.oauth2ResourceServer(
+						(oauth2ResourceServer) -> oauth2ResourceServer
+								.jwt(Customizer.withDefaults()));
+		return http.build();
+	}
 
-    private Customizer<CorsConfigurer<HttpSecurity>> corsCustomizer() {
-	return corsEnabled ? Customizer.withDefaults()
-		: cors -> cors.disable();
-    }
+	private Customizer<CorsConfigurer<HttpSecurity>> corsCustomizer() {
+		return corsEnabled ? Customizer.withDefaults() : cors -> cors.disable();
+	}
 
-    @Bean
-    JwtAuthenticationConverter authenticationConverter() {
-	JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-	authoritiesConverter
-		.setAuthoritiesClaimName("role");
-	authoritiesConverter.setAuthorityPrefix("ROLE_");
-	JwtAuthenticationConverter authenticationConverter = new JwtAuthenticationConverter();
-	authenticationConverter
-		.setJwtGrantedAuthoritiesConverter(
-			authoritiesConverter);
-	return authenticationConverter;
-    }
+	@Bean
+	JwtAuthenticationConverter authenticationConverter() {
+		JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
+		authoritiesConverter.setAuthoritiesClaimName("role");
+		authoritiesConverter.setAuthorityPrefix("ROLE_");
+		JwtAuthenticationConverter authenticationConverter = new JwtAuthenticationConverter();
+		authenticationConverter
+				.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+		return authenticationConverter;
+	}
 
-    @Bean
-    JwtDecoder jwtDecoder() throws Exception {
-	SecretKey key = new SecretKeySpec(secret.getBytes(),
-		"HmacSHA256");
-	return NimbusJwtDecoder.withSecretKey(key).build();
-    }
+	@Bean
+	JwtDecoder jwtDecoder() throws Exception {
+		SecretKey key = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
+		return NimbusJwtDecoder.withSecretKey(key).build();
+	}
 
 }

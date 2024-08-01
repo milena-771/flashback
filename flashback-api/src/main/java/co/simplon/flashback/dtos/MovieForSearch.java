@@ -4,75 +4,84 @@ import java.util.Set;
 
 public class MovieForSearch {
 
-    private Long id;
+	private Long id;
 
-    private String title;
+	private String title;
 
-    private String poster;
+	private String poster;
 
-    private int releaseYear;
+	private int releaseYear;
 
-    private String summary;
+	private String summary;
 
-    private Set<DirectorDetails> directors;
+	private String genreName;
 
-    public MovieForSearch() {
-    }
+	private Set<DirectorDetails> directors;
 
-    public Long getId() {
-	return id;
-    }
+	public MovieForSearch() {
+	}
 
-    public void setId(Long id) {
-	this.id = id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public String getTitle() {
-	return title;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public void setTitle(String title) {
-	this.title = title;
-    }
+	public String getTitle() {
+		return title;
+	}
 
-    public String getPoster() {
-	return poster;
-    }
+	public void setTitle(String title) {
+		this.title = title;
+	}
 
-    public void setPoster(String poster) {
-	this.poster = poster;
-    }
+	public String getPoster() {
+		return poster;
+	}
 
-    public int getReleaseYear() {
-	return releaseYear;
-    }
+	public void setPoster(String poster) {
+		this.poster = poster;
+	}
 
-    public void setReleaseYear(int releaseYear) {
-	this.releaseYear = releaseYear;
-    }
+	public int getReleaseYear() {
+		return releaseYear;
+	}
 
-    public Set<DirectorDetails> getDirectors() {
-	return directors;
-    }
+	public void setReleaseYear(int releaseYear) {
+		this.releaseYear = releaseYear;
+	}
 
-    public void setDirectors(
-	    Set<DirectorDetails> directors) {
-	this.directors = directors;
-    }
+	public Set<DirectorDetails> getDirectors() {
+		return directors;
+	}
 
-    public String getSummary() {
-	return summary;
-    }
+	public void setDirectors(Set<DirectorDetails> directors) {
+		this.directors = directors;
+	}
 
-    public void setSummary(String summary) {
-	this.summary = summary;
-    }
+	public String getSummary() {
+		return summary;
+	}
 
-    @Override
-    public String toString() {
-	return " {id=" + id + ", title=" + title
-		+ ", poster=" + poster + ", releaseYear="
-		+ releaseYear + ", summary=" + summary
-		+ ", directors=" + directors + "}";
-    }
+	public void setSummary(String summary) {
+		this.summary = summary;
+	}
+
+	public String getGenreName() {
+		return genreName;
+	}
+
+	public void setGenreName(String genreName) {
+		this.genreName = genreName;
+	}
+
+	@Override
+	public String toString() {
+		return "{id=" + id + ", title=" + title + ", poster=" + poster
+				+ ", releaseYear=" + releaseYear + ", summary=" + summary
+				+ ", genreName=" + genreName + ", directors=" + directors + "}";
+	}
+
 }

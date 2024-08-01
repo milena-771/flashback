@@ -25,7 +25,7 @@ const messages = {
         allFilms:"Catalogue",
         updateMovie:"Mettre à jour une fiche film",
         signUp:"Créer un compte",
-        search:"Rechercher des films",
+        search:"Films",
         notFound:"Not Found",
         forbidden:"Forbidden",
         internalError:"Internal Error",
@@ -75,9 +75,7 @@ const messages = {
             summary:{
                 default:"1000 caractères max."
             },
-            search:{
-                searchTitle:"Veuillez indiquer un titre de film."
-            },
+            search:"Veuillez indiquer un titre de film, un nom de cinéaste ou un genre.",
             firstname:{
                 default:"50 caractères max."
             },
@@ -165,7 +163,7 @@ const messages = {
         lastname:"Nom",
         email:"Email",
         password:"Mot de passe",
-        noResult:"Aucun film ne correspond à ce titre.",
+        noResult:"Aucun film ne correspond à ces critères.",
         searchQuestion:"Quel film souhaitez-vous (re)voir ?",
         directedBy:"Réalisé par",
         noFavorite:"Vous n'avez pas de films en favoris.",
