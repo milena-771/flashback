@@ -17,6 +17,7 @@
     "axios": "^1.7.2",
     "pinia": "^2.1.7",
     "vue": "^3.2.47",
+    "vue-awesome-paginate": "^1.2.0",
     "vue-i18n": "^9.13.1",
     "vue-router": "^4.3.3"
   },

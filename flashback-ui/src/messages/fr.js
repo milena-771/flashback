@@ -76,6 +76,7 @@ const messages = {
                 default:"1000 caractères max."
             },
             search:"Veuillez indiquer un titre de film, un nom de cinéaste ou un genre.",
+            searchByTitle:"Veuillez indiquer un titre de film.",
             firstname:{
                 default:"50 caractères max."
             },
@@ -152,6 +153,7 @@ const messages = {
         releaseYear:"Année de sortie",
         genre:"Genre",
         directors:"Cinéaste(s)",
+        director: "Cinéaste",
         poster:"Affiche du film",
         trailer:"Bande-annonce",
         summary:"Synopsis",
@@ -180,7 +182,8 @@ const messages = {
         organizer:"Organisé par",
         details:"Détails",
         noRetroAdmin:"Aucune rétrospective n'est planifiée actuellement.",
-        registration:"Inscription"
+        registration:"Inscription",
+        filterBy:"Filtrer par"
 
     },
     button:{

@@ -2,36 +2,35 @@ package co.simplon.flashback.dtos;
 
 import java.util.Collection;
 
+import org.springframework.data.domain.Page;
+
 public class MoviesForSearchAndFavorites {
 
-    private Collection<MovieForSearch> movies;
+	private Page<MovieForSearch> movies;
 
-    private Collection<MovieFavorite> favorites;
+	private Collection<MovieFavorite> favorites;
 
-    public MoviesForSearchAndFavorites() {
-    }
+	public MoviesForSearchAndFavorites() {
+	}
 
-    public Collection<MovieForSearch> getMovies() {
-	return movies;
-    }
+	public Page<MovieForSearch> getMovies() {
+		return movies;
+	}
 
-    public void setMovies(
-	    Collection<MovieForSearch> movies) {
-	this.movies = movies;
-    }
+	public void setMovies(Page<MovieForSearch> movies) {
+		this.movies = movies;
+	}
 
-    public Collection<MovieFavorite> getFavorites() {
-	return favorites;
-    }
+	public Collection<MovieFavorite> getFavorites() {
+		return favorites;
+	}
 
-    public void setFavorites(
-	    Collection<MovieFavorite> favorites) {
-	this.favorites = favorites;
-    }
+	public void setFavorites(Collection<MovieFavorite> favorites) {
+		this.favorites = favorites;
+	}
 
-    @Override
-    public String toString() {
-	return " {movies=" + movies + ", favorites="
-		+ favorites + "}";
-    }
+	@Override
+	public String toString() {
+		return " {movies=" + movies + ", favorites=" + favorites + "}";
+	}
 }

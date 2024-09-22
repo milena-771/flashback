@@ -6,22 +6,22 @@ export default {
         return{
             baseUrl: import.meta.env.VITE_IMG_BASE_URL,
             movies:[],
-            search:""
-        }
-    },
-    computed:{
-        searchMovies(){
-            const normalizeSearchValue = this.search.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-            return this.movies.filter(movie => {
-                const normalizeMovie = movie.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                return normalizeMovie.includes(normalizeSearchValue)
-            })
+            search:"",
+            actualPage: 1,
+            totalItems: 0,
+            itemsPerPage: 10,
+            isLoading:false
         }
     },
     methods:{
-        async initMovies(){
-            const response = await this.$axios.get('/movies/for-edit');
-            this.movies = response.data;
+        async initMovies(page){
+            this.isLoading=true;
+            const response = await this.$axios.get(`/movies/for-edit?title=${encodeURIComponent(this.search)}&page=${page}&size=${this.itemsPerPage}`);
+            this.movies = response.data.content;
+            this.totalItems = response.data.totalElements;
+            this.itemsPerPage = response.data.size;
+            this.actualPage = page;
+            this.isLoading=false;
         },
         async remove(movieId, title){
             try{
@@ -38,40 +38,53 @@ export default {
                     window.scrollTo(0,0);
                     this.$toast.error('toast-global',  this.$i18n.t("toast.movie.errorDelete"));
                 }
-            }
-                  
+            }         
+        },
+        changePage(page) {
+            this.initMovies(page);
         }        
     },
     beforeMount(){
-        this.initMovies();
+        this.initMovies(1);
     }
 }
 </script>
 <template>
     <main class="container-xl">
         <h1 class="pt-3 mt-2 mb-3">{{ $t(`titles.editAll`) }}</h1>
-        
+
         <!--Search bar-->
-        <form class="my-4 col-md-6 mx-auto">
+        <form class="my-4 col-md-6 mx-auto" @submit.prevent="initMovies(1)">
             <label for="search" class="form-label fw-bold">{{ $t(`label.searchMovie`) }}</label>
             <div class="input-group">
                 <input v-model.trim="search" name="search" id="search" type="text" class="form-control"/>
-                <span class="input-group-text searchIcon"><i class="bi bi-search zoom"></i></span>
+                <button class="btn blackBtnOutline" type="submit" :disabled="search.length === 0">{{ $t(`button.search`) }}</button>
             </div>
-            <div class="form-text">{{ $t(`form.helpText.search.searchTitle`) }}</div>
+            <div class="form-text">{{ $t(`form.helpText.searchByTitle`) }}</div>
         </form> 
         
         <!--Search results-->
-        <h2 v-if="searchMovies.length === movies.length && movies.length > 0">{{ $t(`titles.allFilms`) }}</h2>
-        <h2 v-else>{{ $t(`titles.results`) }}</h2>
+        <div class="d-flex">
+            <h2 class="d-md-inline d-none">{{ $t(`titles.allFilms`) }}</h2>
+            <vue-awesome-paginate
+                v-if="movies.length > 0 && !isLoading"
+                class="ms-auto"
+                :total-items="totalItems"
+                :items-per-page="itemsPerPage"
+                :max-pages-shown="1"
+                v-model.trim="actualPage"
+                @click="changePage(actualPage)"
+            />
+        </div>
 
         <div class="d-flex justify-content-center">
-            <div v-if="!movies.length" class="spinner-border text-dark">
+            <div v-if="isLoading" class="spinner-border text-dark">
                 <span class="visually-hidden">Loading...</span>
             </div>
         </div>
 
-        <div v-if="searchMovies.length" class="table-responsive">
+
+        <div v-if="movies.length > 0 && !isLoading" class="table-responsive">
             <table class="table table-hover align-middle">
             <thead>
                 <tr>
@@ -83,7 +96,7 @@ export default {
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="movie in searchMovies">
+                <tr v-for="movie in movies">
                     <td class="d-none d-sm-table-cell"><img :src="baseUrl + movie.poster" :alt="movie.title" class="img-thumbnail"></td>
                     <td class="d-none d-lg-table-cell">{{ movie.isan }}</td>
                     <td>{{ movie.releaseYear }}</td>
@@ -104,7 +117,7 @@ export default {
     </div>
 
      <!--Display an image if no result found-->
-    <div v-else-if="!searchMovies.length && movies.length" class="text-center my-4">
+    <div v-else-if="movies.length === 0 && !isLoading" class="text-center my-4">
         <div><img src="/logos/empty-folder.png" class="noResult"></div>
         {{ $t(`label.noResult`) }}
     </div>

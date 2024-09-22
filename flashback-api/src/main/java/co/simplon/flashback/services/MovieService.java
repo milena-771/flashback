@@ -1,7 +1,8 @@
 package co.simplon.flashback.services;
 
-import java.util.Collection;
 import java.util.Optional;
+
+import org.springframework.data.domain.Page;
 
 import co.simplon.flashback.dtos.Labels;
 import co.simplon.flashback.dtos.MovieCreate;
@@ -20,7 +21,7 @@ public interface MovieService {
 
 	Boolean existsByTrailer(String trailer);
 
-	Collection<MovieItem> getAllForEdit();
+	Page<MovieItem> getAllForEdit(String title, int page, int size);
 
 	Labels getAllLabels();
 
@@ -32,11 +33,12 @@ public interface MovieService {
 
 	Optional<Long> existsByTrailerForUpdate(MovieUpdate inputs);
 
-	MoviesForSearchAndFavorites getAllForSearch();
+	MoviesForSearchAndFavorites getAllForSearch(int page, int size);
 
-	Collection<MovieForSearch> searchByTitle(String title);
+	Page<MovieForSearch> searchByTitle(String title, int page, int size);
 
-	Collection<MovieForSearch> searchByDirectorLastname(String lastname);
+	Page<MovieForSearch> searchByDirectorLastname(String lastname, int page,
+			int size);
 
-	Collection<MovieForSearch> searchByGenre(String genre);
+	Page<MovieForSearch> searchByGenre(String genre, int page, int size);
 }

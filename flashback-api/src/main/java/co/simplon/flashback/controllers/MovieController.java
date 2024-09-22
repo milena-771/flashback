@@ -1,7 +1,6 @@
 package co.simplon.flashback.controllers;
 
-import java.util.Collection;
-
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,13 +41,17 @@ public class MovieController {
 	}
 
 	@GetMapping("/for-edit")
-	public Collection<MovieItem> getAllForEdit() {
-		return service.getAllForEdit();
+	public Page<MovieItem> getAllForEdit(@RequestParam String title,
+			@RequestParam(value = "page") int page,
+			@RequestParam(value = "size") int size) {
+		return service.getAllForEdit(title, page, size);
 	}
 
 	@GetMapping("/for-search")
-	public MoviesForSearchAndFavorites getAllForSearch() {
-		return service.getAllForSearch();
+	public MoviesForSearchAndFavorites getAllForSearch(
+			@RequestParam(value = "page") int page,
+			@RequestParam(value = "size") int size) {
+		return service.getAllForSearch(page, size);
 	}
 
 	@GetMapping("/labels")
@@ -75,21 +78,25 @@ public class MovieController {
 	}
 
 	@GetMapping("/by-title")
-	public Collection<MovieForSearch> searchByTitle(
-			@RequestParam String title) {
-		return service.searchByTitle(title);
+	public Page<MovieForSearch> searchByTitle(@RequestParam String title,
+			@RequestParam(value = "page") int page,
+			@RequestParam(value = "size") int size) {
+		return service.searchByTitle(title, page, size);
 	}
 
 	@GetMapping("/by-director")
-	public Collection<MovieForSearch> searchByDirectorLastname(
-			@RequestParam String lastname) {
-		return service.searchByDirectorLastname(lastname);
+	public Page<MovieForSearch> searchByDirectorLastname(
+			@RequestParam String lastname,
+			@RequestParam(value = "page") int page,
+			@RequestParam(value = "size") int size) {
+		return service.searchByDirectorLastname(lastname, page, size);
 	}
 
 	@GetMapping("/by-genre")
-	public Collection<MovieForSearch> searchByGenre(
-			@RequestParam String genre) {
-		return service.searchByGenre(genre);
+	public Page<MovieForSearch> searchByGenre(@RequestParam String genre,
+			@RequestParam(value = "page") int page,
+			@RequestParam(value = "size") int size) {
+		return service.searchByGenre(genre, page, size);
 	}
 
 }

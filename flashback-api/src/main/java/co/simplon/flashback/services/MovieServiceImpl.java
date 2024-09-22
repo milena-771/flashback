@@ -17,6 +17,9 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -137,8 +140,14 @@ public class MovieServiceImpl implements MovieService {
 	}
 
 	@Override
-	public Collection<MovieItem> getAllForEdit() {
-		return movies.findAllProjectedByOrderByReleaseYearAscTitle();
+	public Page<MovieItem> getAllForEdit(String title, int page, int size) {
+		PageRequest pageRequest = PageRequest.of(page - 1, size);
+		if (title.isEmpty()) {
+			return movies
+					.findAllProjectedByOrderByReleaseYearAscTitle(pageRequest);
+		} else {
+			return movies.findMovieByTitleForEdit(title, pageRequest);
+		}
 	}
 
 	@Override
@@ -249,14 +258,15 @@ public class MovieServiceImpl implements MovieService {
 	}
 
 	@Override
-	public MoviesForSearchAndFavorites getAllForSearch() {
+	public MoviesForSearchAndFavorites getAllForSearch(int page, int size) {
 		String subject = SecurityContextHolder.getContext().getAuthentication()
 				.getName();
 		Long userId = Long.valueOf(subject);
 		Collection<MovieItem> allMovies = movies
 				.findAllProjectedByOrderByReleaseYearAscTitle();
-		Collection<MovieForSearch> allMoviesWithDirectors = getMoviesListWithDirectors(
-				allMovies);
+		PageRequest pageRequest = PageRequest.of(page - 1, size);
+		Page<MovieForSearch> allMoviesWithDirectors = getMoviesListWithDirectorsByPage(
+				allMovies, pageRequest);
 		Collection<MovieFavorite> favoritesList = favorites
 				.findByUserId(userId);
 		MoviesForSearchAndFavorites initMoviesAndFavorites = new MoviesForSearchAndFavorites();
@@ -265,9 +275,9 @@ public class MovieServiceImpl implements MovieService {
 		return initMoviesAndFavorites;
 	}
 
-	private Collection<MovieForSearch> getMoviesListWithDirectors(
-			Collection<MovieItem> moviesList) {
-		Collection<MovieForSearch> moviesWithDirectors = new ArrayList<>();
+	private Page<MovieForSearch> getMoviesListWithDirectorsByPage(
+			Collection<MovieItem> moviesList, PageRequest pageRequest) {
+		List<MovieForSearch> moviesWithDirectors = new ArrayList<>();
 		for (MovieItem movie : moviesList) {
 			MovieForSearch searchMovie = new MovieForSearch();
 			Set<DirectorDetails> directors = directions
@@ -280,32 +290,43 @@ public class MovieServiceImpl implements MovieService {
 			searchMovie.setGenreName(movie.getGenre().getGenreName());
 			moviesWithDirectors.add(searchMovie);
 		}
+		int start = (int) pageRequest.getOffset();
+		int end = Math.min((start + pageRequest.getPageSize()),
+				moviesWithDirectors.size());
+		List<MovieForSearch> pageContent = moviesWithDirectors.subList(start,
+				end);
+		return new PageImpl<MovieForSearch>(pageContent, pageRequest,
+				moviesWithDirectors.size());
+	}
+
+	@Override
+	public Page<MovieForSearch> searchByTitle(String title, int page,
+			int size) {
+		PageRequest pageRequest = PageRequest.of(page - 1, size);
+		Collection<MovieItem> moviesFound = movies.findMovieByTitle(title);
+		Page<MovieForSearch> moviesWithDirectors = getMoviesListWithDirectorsByPage(
+				moviesFound, pageRequest);
 		return moviesWithDirectors;
 	}
 
 	@Override
-	public Collection<MovieForSearch> searchByTitle(String title) {
-		List<MovieItem> moviesFound = movies.findMovieByTitle(title);
-		Collection<MovieForSearch> moviesWithDirectors = getMoviesListWithDirectors(
-				moviesFound);
-		return moviesWithDirectors;
-	}
-
-	@Override
-	public Collection<MovieForSearch> searchByDirectorLastname(
-			String lastname) {
-		List<MovieItem> moviesFound = movies
+	public Page<MovieForSearch> searchByDirectorLastname(String lastname,
+			int page, int size) {
+		PageRequest pageRequest = PageRequest.of(page - 1, size);
+		Collection<MovieItem> moviesFound = movies
 				.findMovieByDirectorLastname(lastname);
-		Collection<MovieForSearch> moviesWithDirectors = getMoviesListWithDirectors(
-				moviesFound);
+		Page<MovieForSearch> moviesWithDirectors = getMoviesListWithDirectorsByPage(
+				moviesFound, pageRequest);
 		return moviesWithDirectors;
 	}
 
 	@Override
-	public Collection<MovieForSearch> searchByGenre(String genre) {
-		List<MovieItem> moviesFound = movies.findMovieByGenre(genre);
-		Collection<MovieForSearch> moviesWithDirectors = getMoviesListWithDirectors(
-				moviesFound);
+	public Page<MovieForSearch> searchByGenre(String genre, int page,
+			int size) {
+		PageRequest pageRequest = PageRequest.of(page - 1, size);
+		Collection<MovieItem> moviesFound = movies.findMovieByGenre(genre);
+		Page<MovieForSearch> moviesWithDirectors = getMoviesListWithDirectorsByPage(
+				moviesFound, pageRequest);
 		return moviesWithDirectors;
 	}
 
