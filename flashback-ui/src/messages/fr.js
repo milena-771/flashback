@@ -37,7 +37,8 @@ const messages = {
         retroToCome:"Rétrospectives à venir",
         retroUpdate:"Modifier la rétrospective",
         retroAdmin:"Editer les rétrospectives",
-        userAdmin:"Utilisateurs"
+        userAdmin:"Utilisateurs",
+        results:"résultat(s)"
     },
     form:{
         nameLabel: "Nom",
