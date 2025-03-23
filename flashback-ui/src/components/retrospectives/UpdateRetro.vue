@@ -7,7 +7,7 @@ import Datalist from '../commons/Datalist.vue';
 const namePattern = helpers.regex(/^[a-zA-Z0-9-éàèêôûîç'’?!.,:() ]*$/);
 const descriptionPattern = helpers.regex(/^[a-zA-Z0-9-éàèâêôûùîïç'’"",.:()?!$€% ]*$/);
 
-export default {
+export default { 
     setup(){
         return{
             route: useRoute(),
