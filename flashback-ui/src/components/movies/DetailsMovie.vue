@@ -61,7 +61,7 @@ export default {
         </div>
         <div class="row mb-2">
             <div class="col-md-6 mb-2 text-center">
-                <img :src="baseUrl + movie.poster" class="rounded img-fluid detail-img"/><br>
+                <img v-if="movie.poster" :src="baseUrl + movie.poster" class="rounded img-fluid detail-img"/><br>
             </div>
             <div class="col-md-5">
                 <div class="my-3 text-end d-lg-block d-none">
