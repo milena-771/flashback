@@ -10,14 +10,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @ConditionalOnProperty(value = "flashback-api.cors.enabled", havingValue = "true", matchIfMissing = true)
 public class WebConfig implements WebMvcConfigurer {
 
-    @Value("${flashback-api.cors.allowedOrigins}")
-    private String allowedOrigins;
+	@Value("${flashback-api.cors.allowedOrigins}")
+	private String[] allowedOrigins;
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-	registry.addMapping("/**")
-		.allowedOrigins(allowedOrigins)
-		.allowedMethods("GET", "POST", "PUT",
-			"DELETE", "PATCH");
-    }
+	@Override
+	public void addCorsMappings(CorsRegistry registry) {
+		registry.addMapping("/**").allowedOrigins(allowedOrigins)
+				.allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH");
+	}
 }
