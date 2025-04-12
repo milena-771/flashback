@@ -18,6 +18,7 @@ export default {
     methods:{
         async submit(){ 
             try{
+                console.log("success")
                 localStorage.clear();
                 const response = await this.$axios.post('/sign-in', this.inputs);       
                 if(response.data.role === "ADMIN"){
