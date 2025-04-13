@@ -1,5 +1,5 @@
 pipeline {
-    agent jenkins-agent
+    agent any
 
     stages {
         stage('Test de la branche Main') {
