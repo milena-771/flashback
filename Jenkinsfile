@@ -1,0 +1,24 @@
+pipeline {
+    agent jenkins-agent
+
+    stages {
+        stage('Test de la branche Main') {
+            when {
+                branch 'main' 
+            }
+            steps {
+                echo 'Pipeline lancé pour la branche main !'
+                echo 'Vérification du pipeline réussie.'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Le pipeline a été exécuté avec succès.'
+        }
+        failure {
+            echo 'Le pipeline a échoué.'
+        }
+    }
+}
