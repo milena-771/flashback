@@ -18,7 +18,7 @@ export default {
     methods:{
         async submit(){ 
             try{
-                console.log("success5") 
+                console.log("success6") 
                 console.log("github")
                 localStorage.clear();
                 const response = await this.$axios.post('/sign-in', this.inputs);       
