@@ -1,5 +1,7 @@
 pipeline {
-    agent any
+    agent {
+        label 'jenkins-agent'
+    }
 
     stages {
         stage('Test de la branche Main') {
