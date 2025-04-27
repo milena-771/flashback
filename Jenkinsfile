@@ -2,6 +2,11 @@ pipeline {
     agent any
 
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
         stage('Test de la branche Main') {
             steps {
                 echo 'Pipeline lancé pour la branche main !'
