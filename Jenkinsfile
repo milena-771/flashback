@@ -4,7 +4,8 @@ pipeline {
     }
     environment {
         BUILD_API_JOB = 'flashback-buisness-build-pipeline'
-        RUN_API_JOB = 'flashback-business-run-pipeline'
+        RUN_API_JOB = 'flashback-buisness-run-pipeline'
+         BUILD_UI_JOB = 'flashback-ui-build-pipeline'
     }
 
     stages {
@@ -28,6 +29,13 @@ pipeline {
                 build job: RUN_API_JOB
                 echo 'Run FB API is running !'
 
+            }
+        }
+        stage('Build UI') {
+            steps {
+                echo 'Build UI loading....'
+                build job: BUILD_UI_JOB
+                echo 'Buil UI Finished !'
             }
         }
     }
