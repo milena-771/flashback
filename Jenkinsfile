@@ -28,7 +28,6 @@ pipeline {
                 echo 'Run FB API loading....'
                 build job: RUN_API_JOB
                 echo 'Run FB API is running !'
-
             }
         }
         stage('Build UI') {
