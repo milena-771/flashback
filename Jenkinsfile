@@ -5,7 +5,6 @@ pipeline {
     environment {
         BUILD_API_JOB = 'flashback-buisness-build-pipeline'
         RUN_API_JOB = 'flashback-business-run-pipeline'
-
     }
 
     stages {
