@@ -14,7 +14,7 @@ export default {
     },
     computed:{
         ...mapWritableState(useStore,['favorites','favoriteId'])
-    },
+    }, 
     methods:{
         async submit(){ 
             try{
