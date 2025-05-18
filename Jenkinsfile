@@ -23,9 +23,6 @@ pipeline {
             }
         }
         stage('Run FB API') {
-            when {
-                branch 'main'
-            }
             steps {
                 echo 'Run FB API loading....'
                 build job: RUN_API_JOB
