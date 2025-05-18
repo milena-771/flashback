@@ -4,6 +4,7 @@ pipeline {
     }
     environment {
         BUILD_API_JOB = 'flashback-buisness-build-pipeline'
+        RUN_API_JOB = 'flashback-buisness-run-pipeline'
     }
 
     stages {
@@ -19,6 +20,17 @@ pipeline {
                 // Lancer le job Jenkins pour le projet Spring Boot
                 build job: BUILD_API_JOB
                 echo 'Build FB API Finished !'
+            }
+        }
+        stage('Run FB API') {
+            when {
+                branch 'main'
+            }
+            steps {
+                echo 'Run FB API loading....'
+                build job: RUN_API_JOB
+                echo 'Run FB API is running !'
+
             }
         }
     }
