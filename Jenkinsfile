@@ -3,8 +3,8 @@ pipeline {
         label 'jenkins-agent'
     }
     environment {
-        BUILD_API_JOB = 'flashback-buisness-build-pipeline'
-        RUN_API_JOB = 'flashback-buisness-run-pipeline'
+        BUILD_API_JOB = 'flashback-business-build-pipeline'
+        RUN_API_JOB = 'flashback-business-run-pipeline'
          BUILD_UI_JOB = 'flashback-ui-build-pipeline'
     }
 
