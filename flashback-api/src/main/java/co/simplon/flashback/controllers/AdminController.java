@@ -2,6 +2,9 @@ package co.simplon.flashback.controllers;
 
 import java.util.Collection;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.hibernate.service.spi.ServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import co.simplon.flashback.dtos.AdminRetroDetailsWithMovies;
 import co.simplon.flashback.dtos.AdminRetroItem;
 import co.simplon.flashback.dtos.UserItem;
+import co.simplon.flashback.errors.DataException;
 import co.simplon.flashback.services.RetrospectiveService;
 import co.simplon.flashback.services.UserService;
 
@@ -20,44 +24,51 @@ import co.simplon.flashback.services.UserService;
 @RequestMapping("/admin")
 public class AdminController {
 
-    private final UserService userService;
+	private final Logger LOG = LogManager.getLogger(AdminController.class);
 
-    private final RetrospectiveService retroService;
+	private final UserService userService;
 
-    public AdminController(UserService userService,
-	    RetrospectiveService retroService) {
-	this.userService = userService;
-	this.retroService = retroService;
-    }
+	private final RetrospectiveService retroService;
 
-    @GetMapping("/users")
-    public Collection<UserItem> getAllUserItems() {
-	return userService.getAllUserItems();
-    }
+	public AdminController(UserService userService,
+			RetrospectiveService retroService) {
+		this.userService = userService;
+		this.retroService = retroService;
+	}
 
-    @DeleteMapping("/{id}/remove-user")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(
-	    @PathVariable("id") Long userId) {
-	userService.deleteUser(userId);
-    }
+	@GetMapping("/users")
+	public Collection<UserItem> getAllUserItems() {
+		try {
+			LOG.info("START --> getAllUserItems");
+			return userService.getAllUserItems();
+		} catch (DataException e) {
+			LOG.error(e);
+			throw new ServiceException(e.getMessage());
+		} finally {
+			LOG.info("END <-- getAllUserItems");
+		}
+	}
 
-    @GetMapping("/retrospectives")
-    public Collection<AdminRetroItem> getAllRetrospectives() {
-	return retroService.getAllRetrospectives();
-    }
+	@DeleteMapping("/{id}/remove-user")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void deleteUser(@PathVariable("id") Long userId) {
+		userService.deleteUser(userId);
+	}
 
-    @DeleteMapping("/{id}/remove-retro")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteRetrospectiveByAdmin(
-	    @PathVariable("id") Long retroId) {
-	retroService.deleteRetrospectiveByAdmin(retroId);
-    }
+	@GetMapping("/retrospectives")
+	public Collection<AdminRetroItem> getAllRetrospectives() {
+		return retroService.getAllRetrospectives();
+	}
 
-    @GetMapping("/{id}/retro-details")
-    public AdminRetroDetailsWithMovies getAdminRetroDetails(
-	    @PathVariable("id") Long retrospectiveId) {
-	return retroService
-		.getAdminRetroDetails(retrospectiveId);
-    }
+	@DeleteMapping("/{id}/remove-retro")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void deleteRetrospectiveByAdmin(@PathVariable("id") Long retroId) {
+		retroService.deleteRetrospectiveByAdmin(retroId);
+	}
+
+	@GetMapping("/{id}/retro-details")
+	public AdminRetroDetailsWithMovies getAdminRetroDetails(
+			@PathVariable("id") Long retrospectiveId) {
+		return retroService.getAdminRetroDetails(retrospectiveId);
+	}
 }
