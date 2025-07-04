@@ -1,5 +1,7 @@
 package co.simplon.flashback.controllers;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,6 +30,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/movies")
 public class MovieController {
 
+	private final Logger LOG = LogManager.getLogger();
+
 	private final MovieService service;
 
 	public MovieController(MovieService service) {
@@ -51,7 +55,12 @@ public class MovieController {
 	public MoviesForSearchAndFavorites getAllForSearch(
 			@RequestParam(value = "page") int page,
 			@RequestParam(value = "size") int size) {
-		return service.getAllForSearch(page, size);
+		try {
+			LOG.info("START --> getAllForSearch");
+			return service.getAllForSearch(page, size);
+		} finally {
+			LOG.info("END <-- getAllForSearch");
+		}
 	}
 
 	@GetMapping("/labels")
