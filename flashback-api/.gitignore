@@ -9,6 +9,7 @@ secrets/
 .project
 .settings
 application-dev.properties
+log4j2.xml
 
 ### Others ###
 .DS_Store

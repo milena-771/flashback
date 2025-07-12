@@ -7,7 +7,6 @@ import co.simplon.flashback.dtos.SignUp;
 import co.simplon.flashback.dtos.TokenInfo;
 import co.simplon.flashback.dtos.TokenRefreshInfo;
 import co.simplon.flashback.dtos.UserItem;
-import co.simplon.flashback.errors.DataException;
 
 public interface UserService {
 
@@ -17,7 +16,7 @@ public interface UserService {
 
 	TokenInfo signIn(SignIn inputs);
 
-	Collection<UserItem> getAllUserItems() throws DataException;
+	Collection<UserItem> getAllUserItems();
 
 	void deleteUser(Long userId);
 

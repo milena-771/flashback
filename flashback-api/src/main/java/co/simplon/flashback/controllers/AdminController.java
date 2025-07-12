@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.service.spi.ServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import co.simplon.flashback.dtos.AdminRetroDetailsWithMovies;
 import co.simplon.flashback.dtos.AdminRetroItem;
 import co.simplon.flashback.dtos.UserItem;
-import co.simplon.flashback.errors.DataException;
 import co.simplon.flashback.services.RetrospectiveService;
 import co.simplon.flashback.services.UserService;
 
@@ -38,15 +36,7 @@ public class AdminController {
 
 	@GetMapping("/users")
 	public Collection<UserItem> getAllUserItems() {
-		try {
-			LOG.info("START --> getAllUserItems");
-			return userService.getAllUserItems();
-		} catch (DataException e) {
-			LOG.error(e);
-			throw new ServiceException(e.getMessage());
-		} finally {
-			LOG.info("END <-- getAllUserItems");
-		}
+		return userService.getAllUserItems();
 	}
 
 	@DeleteMapping("/{id}/remove-user")

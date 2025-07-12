@@ -30,7 +30,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/movies")
 public class MovieController {
 
-	private final Logger LOG = LogManager.getLogger();
+	private final Logger LOG = LogManager.getLogger(MovieController.class);
 
 	private final MovieService service;
 
@@ -56,10 +56,10 @@ public class MovieController {
 			@RequestParam(value = "page") int page,
 			@RequestParam(value = "size") int size) {
 		try {
-			LOG.info("START --> getAllForSearch");
+			LOG.info("--- START >>> getAllForSearch");
 			return service.getAllForSearch(page, size);
 		} finally {
-			LOG.info("END <-- getAllForSearch");
+			LOG.info("--- END <<< getAllForSearch");
 		}
 	}
 

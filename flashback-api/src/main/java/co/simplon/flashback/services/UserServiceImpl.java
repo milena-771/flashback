@@ -10,7 +10,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,6 @@ import co.simplon.flashback.dtos.UserItem;
 import co.simplon.flashback.entities.Retrospective;
 import co.simplon.flashback.entities.Role;
 import co.simplon.flashback.entities.User;
-import co.simplon.flashback.errors.DataException;
 import co.simplon.flashback.errors.FlashbackException;
 import co.simplon.flashback.repositories.FavoriteRepository;
 import co.simplon.flashback.repositories.ParticipantRepository;
@@ -145,16 +143,8 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public Collection<UserItem> getAllUserItems() throws DataException {
-		try {
-			LOG.info("START --> getAllUserItems");
-			return users.getAllUsers();
-		} catch (DataAccessException e) {
-			LOG.error(e);
-			throw new DataException(e.getMessage());
-		} finally {
-			LOG.info("END <-- getAllUserItems");
-		}
+	public Collection<UserItem> getAllUserItems() {
+		return users.getAllUsers();
 	}
 
 	@Override
