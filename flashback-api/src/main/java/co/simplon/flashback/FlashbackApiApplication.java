@@ -9,8 +9,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class FlashbackApiApplication {
 
 	public static void main(String[] args) {
-		Logger LOG = LogManager.getLogger(FlashbackApiApplication.class);
-		LOG.info("Démarrage de l'application FlashbackApiApplication");
+		Logger LOG = LogManager.getLogger();
+		LOG.info("Starting FlashbackApiApplication");
 		SpringApplication.run(FlashbackApiApplication.class, args);
 	}
 

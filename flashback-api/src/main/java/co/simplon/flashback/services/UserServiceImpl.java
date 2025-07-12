@@ -35,7 +35,7 @@ import co.simplon.flashback.repositories.UserRepository;
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
-	private final Logger LOG = LogManager.getLogger(UserServiceImpl.class);
+	private final Logger LOG = LogManager.getLogger();
 
 	@Value("${flashback-api.auth.tokenAccessExp}")
 	private long tokenExpiration;
