@@ -16,7 +16,7 @@ import co.simplon.flashback.dtos.RetrospectiveUpdate;
 
 public interface RetrospectiveService {
 
-    void create(RetrospectiveCreate inputs);
+    void createRetro(RetrospectiveCreate inputs);
 
     Boolean existsByRetroName(String name);
 
@@ -39,7 +39,7 @@ public interface RetrospectiveService {
     ParticipantRetroForUpdate getRetroToComeDetails(
 	    Long retrospectiveId);
 
-    void deleteRetrospectiveByOrganizer(
+    void deleteRetroByOrganizer(
 	    Long retrospectiveId);
 
     void deleteRetrospectiveByAdmin(Long retrospectiveId);
@@ -47,7 +47,7 @@ public interface RetrospectiveService {
     FavoriteAndLabelsAndRetroDetailsForUpdate getRetroDetailsForUpdate(
 	    Long retrospectiveId);
 
-    void updateRetrospective(Long retrospectiveId,
+    void updateRetro(Long retrospectiveId,
 	    RetrospectiveUpdate inputs);
 
     Optional<Long> existsByRetrospectiveNameForUpdate(

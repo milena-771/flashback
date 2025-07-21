@@ -2,6 +2,8 @@ package co.simplon.flashback.controllers;
 
 import java.util.Collection;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,101 +33,100 @@ import jakarta.validation.Valid;
 @RequestMapping("/retrospectives")
 public class RetrospectiveController {
 
-    private final RetrospectiveService retroService;
+	private final Logger LOG = LogManager
+			.getLogger(RetrospectiveController.class);
 
-    private final FavoriteService favoriteService;
+	private final RetrospectiveService retroService;
 
-    public RetrospectiveController(
-	    RetrospectiveService retroService,
-	    FavoriteService favoriteService) {
-	this.retroService = retroService;
-	this.favoriteService = favoriteService;
-    }
+	private final FavoriteService favoriteService;
 
-    @PostMapping("/create")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void post(
-	    @RequestBody @Valid RetrospectiveCreate inputs) {
-	retroService.create(inputs);
-    }
+	public RetrospectiveController(RetrospectiveService retroService,
+			FavoriteService favoriteService) {
+		this.retroService = retroService;
+		this.favoriteService = favoriteService;
+	}
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteRetrospectiveByOrganizer(
-	    @PathVariable("id") Long retrospectiveId) {
-	retroService.deleteRetrospectiveByOrganizer(
-		retrospectiveId);
-    }
+	@PostMapping("/create")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void post(@RequestBody @Valid RetrospectiveCreate inputs) {
+		retroService.createRetro(inputs);
+	}
 
-    @GetMapping("/{id}/for-update")
-    public FavoriteAndLabelsAndRetroDetailsForUpdate getRetroDetailsForUpdate(
-	    @PathVariable("id") Long retrospectiveId) {
-	return retroService
-		.getRetroDetailsForUpdate(retrospectiveId);
-    }
+	@DeleteMapping("/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void deleteRetrospectiveByOrganizer(
+			@PathVariable("id") Long retrospectiveId) {
+		retroService.deleteRetroByOrganizer(retrospectiveId);
+	}
 
-    @PutMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateRetrospective(
-	    @PathVariable("id") Long id,
-	    @RequestBody @Valid RetrospectiveUpdate inputs) {
-	retroService.updateRetrospective(id, inputs);
-    }
+	@GetMapping("/{id}/for-update")
+	public FavoriteAndLabelsAndRetroDetailsForUpdate getRetroDetailsForUpdate(
+			@PathVariable("id") Long retrospectiveId) {
+		return retroService.getRetroDetailsForUpdate(retrospectiveId);
+	}
 
-    @GetMapping("/labels")
-    public FavoritesAndLabels getAllLabels() {
-	Collection<MovieForSearch> favorites = favoriteService
-		.getAllFavoritesWithDirectors();
-	Collection<DeviceDetails> devices = retroService
-		.getAllDeviceLabels();
-	FavoritesAndLabels labels = new FavoritesAndLabels();
-	labels.setFavorites(favorites);
-	labels.setDevices(devices);
-	return labels;
-    }
+	@PutMapping("/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void updateRetrospective(@PathVariable("id") Long id,
+			@RequestBody @Valid RetrospectiveUpdate inputs) {
+		retroService.updateRetro(id, inputs);
+	}
 
-    @GetMapping("/planning")
-    public RetroItemsAsOrgaAndParticipant getAllRetroAsOrgaAndParticipant() {
-	return retroService
-		.getAllRetroAsOrgaAndParticipant();
-    }
+	@GetMapping("/labels")
+	public FavoritesAndLabels getAllLabels() {
+		try {
+			LOG.info("--- START >>> getAllLabels");
+			Collection<MovieForSearch> favorites = favoriteService
+					.getAllFavoritesWithDirectors();
+			Collection<DeviceDetails> devices = retroService
+					.getAllDeviceLabels();
+			FavoritesAndLabels labels = new FavoritesAndLabels();
+			labels.setFavorites(favorites);
+			labels.setDevices(devices);
+			return labels;
+		} finally {
+			LOG.info("--- END <<< getAllLabels");
+		}
+	}
 
-    @GetMapping("/to-come")
-    public Collection<RetroItem> getAllRetroToCome() {
-	return retroService.getAllRetroToCome();
-    }
+	@GetMapping("/planning")
+	public RetroItemsAsOrgaAndParticipant getAllRetroAsOrgaAndParticipant() {
+		return retroService.getAllRetroAsOrgaAndParticipant();
+	}
 
-    @PutMapping("/{id}/add-participant")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void addParticipant(
-	    @PathVariable("id") Long retrospectiveId) {
-	retroService.addParticipant(retrospectiveId);
-    }
+	@GetMapping("/to-come")
+	public Collection<RetroItem> getAllRetroToCome() {
+		return retroService.getAllRetroToCome();
+	}
 
-    @DeleteMapping("/{id}/remove-participant")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeParticipant(
-	    @PathVariable("id") Long retrospectiveId) {
-	retroService.removeParticipant(retrospectiveId);
-    }
+	@PutMapping("/{id}/add-participant")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void addParticipant(@PathVariable("id") Long retrospectiveId) {
+		retroService.addParticipant(retrospectiveId);
+	}
 
-    @GetMapping("/{id}/orga-details")
-    public OrgaRetroForUpdate getOrgaRetroDetails(
-	    @PathVariable("id") Long retroId) {
-	return retroService.getOrgaRetroDetails(retroId);
-    }
+	@DeleteMapping("/{id}/remove-participant")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void removeParticipant(@PathVariable("id") Long retrospectiveId) {
+		retroService.removeParticipant(retrospectiveId);
+	}
 
-    @GetMapping("/{id}/participant-details")
-    public ParticipantRetroForUpdate getParticipantRetroDetails(
-	    @PathVariable("id") Long retroId) {
-	return retroService
-		.getParticipantRetroDetails(retroId);
-    }
+	@GetMapping("/{id}/orga-details")
+	public OrgaRetroForUpdate getOrgaRetroDetails(
+			@PathVariable("id") Long retroId) {
+		return retroService.getOrgaRetroDetails(retroId);
+	}
 
-    @GetMapping("/{id}/retro-details")
-    public ParticipantRetroForUpdate getRetroDetails(
-	    @PathVariable("id") Long retroId) {
-	return retroService.getRetroToComeDetails(retroId);
-    }
+	@GetMapping("/{id}/participant-details")
+	public ParticipantRetroForUpdate getParticipantRetroDetails(
+			@PathVariable("id") Long retroId) {
+		return retroService.getParticipantRetroDetails(retroId);
+	}
+
+	@GetMapping("/{id}/retro-details")
+	public ParticipantRetroForUpdate getRetroDetails(
+			@PathVariable("id") Long retroId) {
+		return retroService.getRetroToComeDetails(retroId);
+	}
 
 }

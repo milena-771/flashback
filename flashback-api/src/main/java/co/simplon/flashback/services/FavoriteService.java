@@ -8,11 +8,11 @@ import co.simplon.flashback.dtos.MovieForSearch;
 
 public interface FavoriteService {
 
-    void add(FavoriteAdd inputs);
+    void addFavorite(FavoriteAdd inputs);
 
-    void delete(Long movieId);
+    void deleteFavorite(Long movieId);
 
-    Collection<MovieFavorite> getAll();
+    Collection<MovieFavorite> getAllFavorites();
 
     Collection<MovieForSearch> getAllFavoritesWithDirectors();
 }

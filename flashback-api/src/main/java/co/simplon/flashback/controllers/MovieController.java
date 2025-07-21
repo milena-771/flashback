@@ -1,7 +1,5 @@
 package co.simplon.flashback.controllers;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,8 +28,6 @@ import jakarta.validation.Valid;
 @RequestMapping("/movies")
 public class MovieController {
 
-	private final Logger LOG = LogManager.getLogger(MovieController.class);
-
 	private final MovieService service;
 
 	public MovieController(MovieService service) {
@@ -41,26 +37,21 @@ public class MovieController {
 	@PostMapping
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void post(@ModelAttribute @Valid MovieCreate inputs) {
-		service.create(inputs);
+		service.createMovie(inputs);
 	}
 
 	@GetMapping("/for-edit")
 	public Page<MovieItem> getAllForEdit(@RequestParam String title,
 			@RequestParam(value = "page") int page,
 			@RequestParam(value = "size") int size) {
-		return service.getAllForEdit(title, page, size);
+		return service.getAllMoviesForEdit(title, page, size);
 	}
 
 	@GetMapping("/for-search")
 	public MoviesForSearchAndFavorites getAllForSearch(
 			@RequestParam(value = "page") int page,
 			@RequestParam(value = "size") int size) {
-		try {
-			LOG.info("--- START >>> getAllForSearch");
-			return service.getAllForSearch(page, size);
-		} finally {
-			LOG.info("--- END <<< getAllForSearch");
-		}
+		return service.getAllMoviesForSearch(page, size);
 	}
 
 	@GetMapping("/labels")
@@ -71,26 +62,26 @@ public class MovieController {
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void delete(@PathVariable("id") Long id) {
-		service.delete(id);
+		service.deleteMovie(id);
 	}
 
 	@GetMapping("/{id}/for-update")
 	public MovieForUpdate forUpdate(@PathVariable("id") Long id) {
-		return service.forUpdate(id);
+		return service.getMovieforUpdate(id);
 	}
 
 	@PutMapping("/{id}")
 	@ResponseStatus(HttpStatus.OK)
 	public MoviePoster update(@PathVariable("id") Long id,
 			@ModelAttribute @Valid MovieUpdate inputs) {
-		return service.update(id, inputs);
+		return service.updateMovie(id, inputs);
 	}
 
 	@GetMapping("/by-title")
 	public Page<MovieForSearch> searchByTitle(@RequestParam String title,
 			@RequestParam(value = "page") int page,
 			@RequestParam(value = "size") int size) {
-		return service.searchByTitle(title, page, size);
+		return service.searchMovieByTitle(title, page, size);
 	}
 
 	@GetMapping("/by-director")
@@ -98,14 +89,14 @@ public class MovieController {
 			@RequestParam String lastname,
 			@RequestParam(value = "page") int page,
 			@RequestParam(value = "size") int size) {
-		return service.searchByDirectorLastname(lastname, page, size);
+		return service.searchMoviesByDirectorLastname(lastname, page, size);
 	}
 
 	@GetMapping("/by-genre")
 	public Page<MovieForSearch> searchByGenre(@RequestParam String genre,
 			@RequestParam(value = "page") int page,
 			@RequestParam(value = "size") int size) {
-		return service.searchByGenre(genre, page, size);
+		return service.searchMoviesByGenre(genre, page, size);
 	}
 
 }

@@ -15,6 +15,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
@@ -58,6 +60,8 @@ import co.simplon.flashback.repositories.RetrospectiveRepository;
 @Transactional(readOnly = true)
 public class MovieServiceImpl implements MovieService {
 
+	private final Logger LOG = LogManager.getLogger(MovieServiceImpl.class);
+
 	@Value("${flashback-api.uploads.location}")
 	private String uploadDir;
 
@@ -98,236 +102,319 @@ public class MovieServiceImpl implements MovieService {
 
 	@Override
 	@Transactional
-	public void create(MovieCreate inputs) {
-		Movie entity = new Movie();
-		entity.setIsan(inputs.isan());
-		entity.setTitle(inputs.title());
-		entity.setReleaseYear(inputs.releaseYear());
-		MultipartFile image = inputs.poster();
-		String posterName = rename(image);
-		entity.setPoster(posterName);
-		store(image, posterName);
-		entity.setTrailer(inputs.trailer());
-		entity.setSummary(inputs.summary());
-		Genre genre = genres.getReferenceById(inputs.genreId());
-		entity.setGenre(genre);
-		Movie movie = movies.save(entity);
-		for (Long id : inputs.directorId()) {
-			Direction movieDirector = new Direction();
-			Director director = directors.getReferenceById(id);
-			movieDirector.setDirector(director);
-			movieDirector.setMovie(movie);
-			directions.save(movieDirector);
+	public void createMovie(MovieCreate inputs) {
+		try {
+			LOG.info("--- START >>> createMovie");
+			Movie entity = new Movie();
+			entity.setIsan(inputs.isan());
+			entity.setTitle(inputs.title());
+			entity.setReleaseYear(inputs.releaseYear());
+			MultipartFile image = inputs.poster();
+			String posterName = renamePoster(image);
+			entity.setPoster(posterName);
+			storePoster(image, posterName);
+			entity.setTrailer(inputs.trailer());
+			entity.setSummary(inputs.summary());
+			Genre genre = genres.getReferenceById(inputs.genreId());
+			entity.setGenre(genre);
+			Movie movie = movies.save(entity);
+			for (Long id : inputs.directorId()) {
+				Direction movieDirector = new Direction();
+				Director director = directors.getReferenceById(id);
+				movieDirector.setDirector(director);
+				movieDirector.setMovie(movie);
+				directions.save(movieDirector);
+			}
+		} finally {
+			LOG.info("--- END <<< createMovie");
 		}
 	}
 
-	public String rename(MultipartFile poster) {
-		String baseName = UUID.randomUUID().toString();
-		String extention = StringUtils
-				.getFilenameExtension(poster.getOriginalFilename());
-		String posterName = baseName + "." + extention;
-		return posterName;
+	public String renamePoster(MultipartFile poster) {
+		try {
+			LOG.info("--- START >>> renamePoster");
+			String baseName = UUID.randomUUID().toString();
+			String extention = StringUtils
+					.getFilenameExtension(poster.getOriginalFilename());
+			String posterName = baseName + "." + extention;
+			return posterName;
+		} finally {
+			LOG.info("--- END <<< renamePoster");
+		}
 	}
 
-	private void store(MultipartFile image, String posterName) {
-		Path uploadPath = Paths.get(uploadDir);
-		Path target = uploadPath.resolve(posterName);
-		try (InputStream in = image.getInputStream()) {
-			Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
-		} catch (IOException ex) {
-			throw new RuntimeException(ex);
+	private void storePoster(MultipartFile image, String posterName) {
+		try {
+			LOG.info("--- START >>> storePoster");
+			Path uploadPath = Paths.get(uploadDir);
+			Path target = uploadPath.resolve(posterName);
+			try (InputStream in = image.getInputStream()) {
+				Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+			} catch (IOException ex) {
+				throw new RuntimeException(ex);
+			}
+		} finally {
+			LOG.info("--- END <<< storePoster");
 		}
 	}
 
 	@Override
-	public Page<MovieItem> getAllForEdit(String title, int page, int size) {
+	public Page<MovieItem> getAllMoviesForEdit(String title, int page,
+			int size) {
 		PageRequest pageRequest = PageRequest.of(page - 1, size);
-		if (title.isEmpty()) {
-			return movies
-					.findAllProjectedByOrderByReleaseYearAscTitle(pageRequest);
-		} else {
-			return movies.findMovieByTitleForEdit(title, pageRequest);
+		try {
+			LOG.info("--- START >>> getAllMoviesForEdit");
+			if (title.isEmpty()) {
+				return movies.findAllProjectedByOrderByReleaseYearAscTitle(
+						pageRequest);
+			} else {
+				return movies.findMovieByTitleForEdit(title, pageRequest);
+			}
+		} finally {
+			LOG.info("--- END <<< getAllMoviesForEdit");
 		}
 	}
 
 	@Override
 	public Boolean existsByIsan(String isan) {
-		return movies.existsByIsan(isan);
+		try {
+			LOG.info("--- START >>> existsByIsan");
+			return movies.existsByIsan(isan);
+		} finally {
+			LOG.info("--- END <<< existsByIsan");
+		}
 	}
 
 	@Override
 	public Boolean existsByTrailer(String trailer) {
-		return movies.existsByTrailer(trailer);
+		try {
+			LOG.info("--- START >>> existsByTrailer");
+			return movies.existsByTrailer(trailer);
+		} finally {
+			LOG.info("--- END <<< existsByTrailer");
+		}
 	}
 
 	@Override
 	public Labels getAllLabels() {
-		Collection<GenreDetails> allGenres = genres
-				.findAllProjectedByOrderByGenreName();
-		Collection<DirectorDetails> allDirectors = directors
-				.findAllProjectedByOrderByLastnameAscFirstname();
-		Collection<Labels> labelsList = new HashSet<>();
-		Labels labels = new Labels();
-		labels.setAllGenres(allGenres);
-		labels.setAllDirectors(allDirectors);
-		return labels;
+		try {
+			LOG.info("--- START >>> getAllLabels");
+			Collection<GenreDetails> allGenres = genres
+					.findAllProjectedByOrderByGenreName();
+			Collection<DirectorDetails> allDirectors = directors
+					.findAllProjectedByOrderByLastnameAscFirstname();
+			Collection<Labels> labelsList = new HashSet<>();
+			Labels labels = new Labels();
+			labels.setAllGenres(allGenres);
+			labels.setAllDirectors(allDirectors);
+			return labels;
+		} finally {
+			LOG.info("--- END <<< getAllLabels");
+		}
 	}
 
 	@Override
 	@Transactional
-	public void delete(Long movieId) {
-		if (movies.existsById(movieId)) {
-			directions.deleteByMovieId(movieId);
-			favorites.deleteByMovieId(movieId);
-			if (containor.existsByMovieId(movieId)) {
-				Set<Retrospective> retros = containor.findByMovieId(movieId);
-				containor.deleteByMovieId(movieId);
-				for (Retrospective retro : retros) {
-					if (retro.getMoviesNumber() > 1) {
-						retro.setMoviesNumber(retro.getMoviesNumber() - 1);
-						retrospectives.save(retro);
-					} else {
-						participants.deleteByRetrospectiveId(retro.getId());
-						retrospectives.deleteById(retro.getId());
+	public void deleteMovie(Long movieId) {
+		try {
+			LOG.info("--- START >>> deleteMovie");
+			if (movies.existsById(movieId)) {
+				directions.deleteByMovieId(movieId);
+				favorites.deleteByMovieId(movieId);
+				if (containor.existsByMovieId(movieId)) {
+					Set<Retrospective> retros = containor
+							.findByMovieId(movieId);
+					containor.deleteByMovieId(movieId);
+					for (Retrospective retro : retros) {
+						if (retro.getMoviesNumber() > 1) {
+							retro.setMoviesNumber(retro.getMoviesNumber() - 1);
+							retrospectives.save(retro);
+						} else {
+							participants.deleteByRetrospectiveId(retro.getId());
+							retrospectives.deleteById(retro.getId());
+						}
 					}
 				}
+				Movie movie = movies.findById(movieId).get();
+				if (movie.getPoster() != null) {
+					Path poster = Paths.get(uploadDir, movie.getPoster());
+					poster.toFile().delete();
+				}
+				movies.deleteById(movieId);
+			} else {
+				throw new FlashbackException(
+						messageSource.getMessage("error.movie.remove.admin",
+								null, Locale.getDefault()),
+						HttpStatus.BAD_REQUEST.name());
 			}
-			Movie movie = movies.findById(movieId).get();
-			if (movie.getPoster() != null) {
-				Path poster = Paths.get(uploadDir, movie.getPoster());
-				poster.toFile().delete();
-			}
-			movies.deleteById(movieId);
-		} else {
-			throw new FlashbackException(
-					messageSource.getMessage("error.movie.remove.admin", null,
-							Locale.getDefault()),
-					HttpStatus.BAD_REQUEST.name());
+		} finally {
+			LOG.info("--- END <<< deleteMovie");
 		}
-
 	}
 
 	@Override
-	public MovieForUpdate forUpdate(Long id) {
-		MovieDetails movie = movies.findProjectedById(id);
-		Set<DirectorDetails> directorsDetails = directions.getMovieDirector(id);
-		MovieForUpdate movieInfos = new MovieForUpdate();
-		movieInfos.setMovieDetails(movie);
-		movieInfos.setDirectorDetails(directorsDetails);
-		return movieInfos;
+	public MovieForUpdate getMovieforUpdate(Long id) {
+		try {
+			LOG.info("--- START >>> getMovieforUpdate");
+			MovieDetails movie = movies.findProjectedById(id);
+			Set<DirectorDetails> directorsDetails = directions
+					.getMovieDirector(id);
+			MovieForUpdate movieInfos = new MovieForUpdate();
+			movieInfos.setMovieDetails(movie);
+			movieInfos.setDirectorDetails(directorsDetails);
+			return movieInfos;
+		} finally {
+			LOG.info("--- END <<< getMovieforUpdate");
+		}
 	}
 
 	@Override
 	@Transactional
-	public MoviePoster update(Long id, MovieUpdate inputs) {
-		Movie entity = movies.findById(id).get();
-		MoviePoster newPoster = new MoviePoster();
-		if (inputs.poster() != null) {
-			Path oldPoster = Paths.get(uploadDir, entity.getPoster());
-			MultipartFile poster = inputs.poster();
-			String posterName = rename(poster);
-			entity.setPoster(posterName);
-			newPoster.setPoster(posterName);
-			store(poster, posterName);
-			oldPoster.toFile().delete();
+	public MoviePoster updateMovie(Long id, MovieUpdate inputs) {
+		try {
+			LOG.info("--- START >>> updateMovie");
+			Movie entity = movies.findById(id).get();
+			MoviePoster newPoster = new MoviePoster();
+			if (inputs.poster() != null) {
+				Path oldPoster = Paths.get(uploadDir, entity.getPoster());
+				MultipartFile poster = inputs.poster();
+				String posterName = renamePoster(poster);
+				entity.setPoster(posterName);
+				newPoster.setPoster(posterName);
+				storePoster(poster, posterName);
+				oldPoster.toFile().delete();
+			}
+			entity.setTitle(inputs.title());
+			entity.setReleaseYear(inputs.releaseYear());
+			entity.setTrailer(inputs.trailer());
+			entity.setSummary(inputs.summary());
+			Genre genre = genres.getReferenceById(inputs.genreId());
+			entity.setGenre(genre);
+			movies.save(entity);
+			directions.deleteByMovieId(id);
+			for (Long directorId : inputs.directorId()) {
+				Direction updateDirection = directions
+						.findByMovieIdAndDirectorId(id, directorId);
+				Direction newDirection = new Direction();
+				Director director = directors.getReferenceById(directorId);
+				newDirection.setDirector(director);
+				newDirection.setMovie(entity);
+				directions.save(newDirection);
+			}
+			return newPoster;
+		} finally {
+			LOG.info("--- END <<< updateMovie");
 		}
-		entity.setTitle(inputs.title());
-		entity.setReleaseYear(inputs.releaseYear());
-		entity.setTrailer(inputs.trailer());
-		entity.setSummary(inputs.summary());
-		Genre genre = genres.getReferenceById(inputs.genreId());
-		entity.setGenre(genre);
-		movies.save(entity);
-		directions.deleteByMovieId(id);
-		for (Long directorId : inputs.directorId()) {
-			Direction updateDirection = directions
-					.findByMovieIdAndDirectorId(id, directorId);
-			Direction newDirection = new Direction();
-			Director director = directors.getReferenceById(directorId);
-			newDirection.setDirector(director);
-			newDirection.setMovie(entity);
-			directions.save(newDirection);
-		}
-		return newPoster;
-
 	}
 
 	@Override
 	public Optional<Long> existsByTrailerForUpdate(MovieUpdate inputs) {
-		return movies.existsByTrailerForUpdate(inputs.trailer(), inputs.id());
+		try {
+			LOG.info("--- START >>> existsByTrailerForUpdate");
+			return movies.existsByTrailerForUpdate(inputs.trailer(),
+					inputs.id());
+		} finally {
+			LOG.info("--- END <<< existsByTrailerForUpdate");
+		}
 	}
 
 	@Override
-	public MoviesForSearchAndFavorites getAllForSearch(int page, int size) {
-		String subject = SecurityContextHolder.getContext().getAuthentication()
-				.getName();
-		Long userId = Long.valueOf(subject);
-		Collection<MovieItem> allMovies = movies
-				.findAllProjectedByOrderByReleaseYearAscTitle();
-		PageRequest pageRequest = PageRequest.of(page - 1, size);
-		Page<MovieForSearch> allMoviesWithDirectors = getMoviesListWithDirectorsByPage(
-				allMovies, pageRequest);
-		Collection<MovieFavorite> favoritesList = favorites
-				.findByUserId(userId);
-		MoviesForSearchAndFavorites initMoviesAndFavorites = new MoviesForSearchAndFavorites();
-		initMoviesAndFavorites.setFavorites(favoritesList);
-		initMoviesAndFavorites.setMovies(allMoviesWithDirectors);
-		return initMoviesAndFavorites;
+	public MoviesForSearchAndFavorites getAllMoviesForSearch(int page,
+			int size) {
+		try {
+			LOG.info("--- START >>> getAllMoviesForSearch");
+			String subject = SecurityContextHolder.getContext()
+					.getAuthentication().getName();
+			Long userId = Long.valueOf(subject);
+			Collection<MovieItem> allMovies = movies
+					.findAllProjectedByOrderByReleaseYearAscTitle();
+			PageRequest pageRequest = PageRequest.of(page - 1, size);
+			Page<MovieForSearch> allMoviesWithDirectors = getMoviesListWithDirectorsByPage(
+					allMovies, pageRequest);
+			Collection<MovieFavorite> favoritesList = favorites
+					.findByUserId(userId);
+			MoviesForSearchAndFavorites initMoviesAndFavorites = new MoviesForSearchAndFavorites();
+			initMoviesAndFavorites.setFavorites(favoritesList);
+			initMoviesAndFavorites.setMovies(allMoviesWithDirectors);
+			return initMoviesAndFavorites;
+		} finally {
+			LOG.info("--- END <<< getAllMoviesForSearch");
+		}
 	}
 
 	private Page<MovieForSearch> getMoviesListWithDirectorsByPage(
 			Collection<MovieItem> moviesList, PageRequest pageRequest) {
-		List<MovieForSearch> moviesWithDirectors = new ArrayList<>();
-		for (MovieItem movie : moviesList) {
-			MovieForSearch searchMovie = new MovieForSearch();
-			Set<DirectorDetails> directors = directions
-					.getMovieDirector(movie.getId());
-			searchMovie.setId(movie.getId());
-			searchMovie.setTitle(movie.getTitle());
-			searchMovie.setReleaseYear(movie.getReleaseYear());
-			searchMovie.setPoster(movie.getPoster());
-			searchMovie.setDirectors(directors);
-			searchMovie.setGenreName(movie.getGenre().getGenreName());
-			moviesWithDirectors.add(searchMovie);
+		try {
+			LOG.info("--- START >>> getMoviesListWithDirectorsByPage");
+			List<MovieForSearch> moviesWithDirectors = new ArrayList<>();
+			for (MovieItem movie : moviesList) {
+				MovieForSearch searchMovie = new MovieForSearch();
+				Set<DirectorDetails> directors = directions
+						.getMovieDirector(movie.getId());
+				searchMovie.setId(movie.getId());
+				searchMovie.setTitle(movie.getTitle());
+				searchMovie.setReleaseYear(movie.getReleaseYear());
+				searchMovie.setPoster(movie.getPoster());
+				searchMovie.setDirectors(directors);
+				searchMovie.setGenreName(movie.getGenre().getGenreName());
+				moviesWithDirectors.add(searchMovie);
+			}
+			int start = (int) pageRequest.getOffset();
+			int end = Math.min((start + pageRequest.getPageSize()),
+					moviesWithDirectors.size());
+			List<MovieForSearch> pageContent = moviesWithDirectors
+					.subList(start, end);
+			return new PageImpl<MovieForSearch>(pageContent, pageRequest,
+					moviesWithDirectors.size());
+		} finally {
+			LOG.info("--- END <<< getMoviesListWithDirectorsByPage");
 		}
-		int start = (int) pageRequest.getOffset();
-		int end = Math.min((start + pageRequest.getPageSize()),
-				moviesWithDirectors.size());
-		List<MovieForSearch> pageContent = moviesWithDirectors.subList(start,
-				end);
-		return new PageImpl<MovieForSearch>(pageContent, pageRequest,
-				moviesWithDirectors.size());
 	}
 
 	@Override
-	public Page<MovieForSearch> searchByTitle(String title, int page,
+	public Page<MovieForSearch> searchMovieByTitle(String title, int page,
 			int size) {
-		PageRequest pageRequest = PageRequest.of(page - 1, size);
-		Collection<MovieItem> moviesFound = movies.findMovieByTitle(title);
-		Page<MovieForSearch> moviesWithDirectors = getMoviesListWithDirectorsByPage(
-				moviesFound, pageRequest);
-		return moviesWithDirectors;
+		try {
+			LOG.info("--- START >>> searchMovieByTitle");
+			PageRequest pageRequest = PageRequest.of(page - 1, size);
+			Collection<MovieItem> moviesFound = movies.findMovieByTitle(title);
+			Page<MovieForSearch> moviesWithDirectors = getMoviesListWithDirectorsByPage(
+					moviesFound, pageRequest);
+			return moviesWithDirectors;
+		} finally {
+			LOG.info("--- END <<< searchMovieByTitle");
+		}
 	}
 
 	@Override
-	public Page<MovieForSearch> searchByDirectorLastname(String lastname,
+	public Page<MovieForSearch> searchMoviesByDirectorLastname(String lastname,
 			int page, int size) {
-		PageRequest pageRequest = PageRequest.of(page - 1, size);
-		Collection<MovieItem> moviesFound = movies
-				.findMovieByDirectorLastname(lastname);
-		Page<MovieForSearch> moviesWithDirectors = getMoviesListWithDirectorsByPage(
-				moviesFound, pageRequest);
-		return moviesWithDirectors;
+		try {
+			LOG.info("--- START >>> searchMoviesByDirectorLastname");
+			PageRequest pageRequest = PageRequest.of(page - 1, size);
+			Collection<MovieItem> moviesFound = movies
+					.findMovieByDirectorLastname(lastname);
+			Page<MovieForSearch> moviesWithDirectors = getMoviesListWithDirectorsByPage(
+					moviesFound, pageRequest);
+			return moviesWithDirectors;
+		} finally {
+			LOG.info("--- END <<< searchMoviesByDirectorLastname");
+		}
 	}
 
 	@Override
-	public Page<MovieForSearch> searchByGenre(String genre, int page,
+	public Page<MovieForSearch> searchMoviesByGenre(String genre, int page,
 			int size) {
-		PageRequest pageRequest = PageRequest.of(page - 1, size);
-		Collection<MovieItem> moviesFound = movies.findMovieByGenre(genre);
-		Page<MovieForSearch> moviesWithDirectors = getMoviesListWithDirectorsByPage(
-				moviesFound, pageRequest);
-		return moviesWithDirectors;
+		try {
+			LOG.info("--- START >>> searchMoviesByGenre");
+			PageRequest pageRequest = PageRequest.of(page - 1, size);
+			Collection<MovieItem> moviesFound = movies.findMovieByGenre(genre);
+			Page<MovieForSearch> moviesWithDirectors = getMoviesListWithDirectorsByPage(
+					moviesFound, pageRequest);
+			return moviesWithDirectors;
+		} finally {
+			LOG.info("--- END <<< searchMoviesByGenre");
+		}
 	}
 
 }

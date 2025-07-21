@@ -35,7 +35,7 @@ import co.simplon.flashback.repositories.UserRepository;
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
-	private final Logger LOG = LogManager.getLogger();
+	private final Logger LOG = LogManager.getLogger(UserServiceImpl.class);
 
 	@Value("${flashback-api.auth.tokenAccessExp}")
 	private long tokenExpiration;
@@ -77,108 +77,140 @@ public class UserServiceImpl implements UserService {
 	@Override
 	@Transactional
 	public void signUp(SignUp inputs) {
-		User user = new User();
-		user.setFirstname(inputs.getFirstname());
-		user.setLastname(inputs.getLastname());
-		user.setEmail(inputs.getEmail());
-		String hashPassword = authHelper.encode(inputs.getPassword());
-		user.setPassword(hashPassword);
-		Role role = roles.getReferenceById(2L);
-		user.setRole(role);
-		LocalDate today = LocalDate.now();
-		user.setCreatedAt(today);
-		users.save(user);
+		try {
+			LOG.info("--- START >>> signUp");
+			User user = new User();
+			user.setFirstname(inputs.getFirstname());
+			user.setLastname(inputs.getLastname());
+			user.setEmail(inputs.getEmail());
+			String hashPassword = authHelper.encode(inputs.getPassword());
+			user.setPassword(hashPassword);
+			Role role = roles.getReferenceById(2L);
+			user.setRole(role);
+			LocalDate today = LocalDate.now();
+			user.setCreatedAt(today);
+			users.save(user);
+		} finally {
+			LOG.info("--- END <<< signUp");
+		}
 	}
 
 	@Override
 	public Boolean existsByEmail(String email) {
-		return users.existsByEmail(email);
+		try {
+			LOG.info("--- START >>> existsByEmail");
+			return users.existsByEmail(email);
+		} finally {
+			LOG.info("--- END <<< existsByEmail");
+		}
 	}
 
 	@Override
 	public TokenRefreshInfo refresh() {
-		String subject = SecurityContextHolder.getContext().getAuthentication()
-				.getName();
-		Long userId = Long.valueOf(subject);
-		User user = users.findById(userId).get();
-		Role userRole = user.getRole();
-		String roleName = userRole.getRoleName();
-		String refreshToken = authHelper.refreshJWT(roleName, subject,
-				tokenRefreshExpiration);
-		TokenRefreshInfo tokenInfo = new TokenRefreshInfo();
-		tokenInfo.setToken(refreshToken);
-		tokenInfo.setRole(roleName);
-		tokenInfo.setFirstname(user.getFirstname());
-		LocalDateTime now = LocalDateTime.now();
-		return tokenInfo;
+		try {
+			LOG.info("--- START >>> refresh");
+			String subject = SecurityContextHolder.getContext()
+					.getAuthentication().getName();
+			Long userId = Long.valueOf(subject);
+			User user = users.findById(userId).get();
+			Role userRole = user.getRole();
+			String roleName = userRole.getRoleName();
+			String refreshToken = authHelper.refreshJWT(roleName, subject,
+					tokenRefreshExpiration);
+			TokenRefreshInfo tokenInfo = new TokenRefreshInfo();
+			tokenInfo.setToken(refreshToken);
+			tokenInfo.setRole(roleName);
+			tokenInfo.setFirstname(user.getFirstname());
+			LocalDateTime now = LocalDateTime.now();
+			return tokenInfo;
+		} finally {
+			LOG.info("--- END <<< refresh");
+		}
 	}
 
 	@Override
 	public TokenInfo signIn(SignIn inputs) {
-		String email = inputs.getEmail();
-		String candidate = inputs.getPassword();
-		User user = users.findByEmail(email);
-		if (user != null) {
-			boolean match = authHelper.matches(candidate, user.getPassword());
-			if (match) {
-				String identifier = user.getId().toString();
-				Role userRole = user.getRole();
-				String roleName = userRole.getRoleName();
-				String token = authHelper.createJWT(roleName, identifier);
-				TokenInfo tokenInfo = new TokenInfo();
-				tokenInfo.setToken(token);
-				tokenInfo.setRole(roleName);
-				tokenInfo.setFirstname(user.getFirstname());
-				LocalDateTime now = LocalDateTime.now();
-				tokenInfo.setExp(now.plusSeconds(tokenExpiration));
-				return tokenInfo;
+		try {
+			LOG.info("--- START >>> signIn");
+			String email = inputs.getEmail();
+			String candidate = inputs.getPassword();
+			User user = users.findByEmail(email);
+			if (user != null) {
+				boolean match = authHelper.matches(candidate,
+						user.getPassword());
+				if (match) {
+					String identifier = user.getId().toString();
+					Role userRole = user.getRole();
+					String roleName = userRole.getRoleName();
+					String token = authHelper.createJWT(roleName, identifier);
+					TokenInfo tokenInfo = new TokenInfo();
+					tokenInfo.setToken(token);
+					tokenInfo.setRole(roleName);
+					tokenInfo.setFirstname(user.getFirstname());
+					LocalDateTime now = LocalDateTime.now();
+					tokenInfo.setExp(now.plusSeconds(tokenExpiration));
+					return tokenInfo;
+				} else {
+					throw new FlashbackException("Wrong credentials",
+							HttpStatus.BAD_REQUEST.name());
+				}
 			} else {
 				throw new FlashbackException("Wrong credentials",
 						HttpStatus.BAD_REQUEST.name());
 			}
-		} else {
-			throw new FlashbackException("Wrong credentials",
-					HttpStatus.BAD_REQUEST.name());
+		} finally {
+			LOG.info("--- END <<< signIn");
 		}
 	}
 
 	@Override
 	public Collection<UserItem> getAllUserItems() {
-		return users.getAllUsers();
+		try {
+			LOG.info("--- START >>> getAllUserItems");
+			return users.getAllUsers();
+		} finally {
+			LOG.info("--- END <<< getAllUserItems");
+		}
 	}
 
 	@Override
 	@Transactional
 	public void deleteUser(Long userId) {
-		if (users.existsById(userId)) {
-			favorites.deleteByUserId(userId);
-			if (participants.existsByUserId(userId)) {
-				Set<Retrospective> retroWithUserAsParticipant = participants
-						.findByUserId(userId);
-				participants.deleteByUserId(userId);
-				for (Retrospective retrospective : retroWithUserAsParticipant) {
-					retrospective.setParticipantsNumber(
-							retrospective.getParticipantsNumber() - 1);
-					retrospectives.save(retrospective);
+		try {
+			LOG.info("--- START >>> deleteUser");
+			if (users.existsById(userId)) {
+				favorites.deleteByUserId(userId);
+				if (participants.existsByUserId(userId)) {
+					Set<Retrospective> retroWithUserAsParticipant = participants
+							.findByUserId(userId);
+					participants.deleteByUserId(userId);
+					for (Retrospective retrospective : retroWithUserAsParticipant) {
+						retrospective.setParticipantsNumber(
+								retrospective.getParticipantsNumber() - 1);
+						retrospectives.save(retrospective);
+					}
 				}
-			}
-			if (retrospectives.existsByOrganizerId(userId)) {
-				Set<Retrospective> retroWithUserAsOrganizer = retrospectives
-						.findByOrganizerId(userId);
-				for (Retrospective retrospective : retroWithUserAsOrganizer) {
-					participants.deleteByRetrospectiveId(retrospective.getId());
-					containor.deleteByRetrospectiveId(retrospective.getId());
+				if (retrospectives.existsByOrganizerId(userId)) {
+					Set<Retrospective> retroWithUserAsOrganizer = retrospectives
+							.findByOrganizerId(userId);
+					for (Retrospective retrospective : retroWithUserAsOrganizer) {
+						participants
+								.deleteByRetrospectiveId(retrospective.getId());
+						containor
+								.deleteByRetrospectiveId(retrospective.getId());
+					}
+					retrospectives.deleteByOrganizerId(userId);
 				}
-				retrospectives.deleteByOrganizerId(userId);
+				users.deleteById(userId);
+			} else {
+				throw new FlashbackException(
+						messageSource.getMessage("error.user.remove.admin",
+								null, Locale.getDefault()),
+						HttpStatus.BAD_REQUEST.name());
 			}
-			users.deleteById(userId);
-		} else {
-			throw new FlashbackException(
-					messageSource.getMessage("error.user.remove.admin", null,
-							Locale.getDefault()),
-					HttpStatus.BAD_REQUEST.name());
+		} finally {
+			LOG.info("--- END <<< deleteUser");
 		}
-
 	}
 
 }

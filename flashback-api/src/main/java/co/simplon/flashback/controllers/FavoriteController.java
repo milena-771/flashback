@@ -32,18 +32,18 @@ public class FavoriteController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void add(
 	    @RequestBody @Valid FavoriteAdd inputs) {
-	service.add(inputs);
+	service.addFavorite(inputs);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") Long movieId) {
-	service.delete(movieId);
+	service.deleteFavorite(movieId);
     }
 
     @GetMapping
     public Collection<MovieFavorite> getAll() {
-	return service.getAll();
+	return service.getAllFavorites();
     }
 
     @GetMapping("/list")
