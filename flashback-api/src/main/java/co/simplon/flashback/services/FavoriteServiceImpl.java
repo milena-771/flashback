@@ -36,9 +36,8 @@ public class FavoriteServiceImpl implements FavoriteService {
 
 	private final DirectionRepository directions;
 
-	public FavoriteServiceImpl(FavoriteRepository favorites,
-			MovieRepository movies, UserRepository users,
-			DirectionRepository directions) {
+	public FavoriteServiceImpl(FavoriteRepository favorites, MovieRepository movies,
+			UserRepository users, DirectionRepository directions) {
 		this.favorites = favorites;
 		this.movies = movies;
 		this.users = users;
@@ -49,10 +48,9 @@ public class FavoriteServiceImpl implements FavoriteService {
 	@Transactional
 	public void addFavorite(FavoriteAdd inputs) {
 		try {
-			LOG.info("--- START >>> addFavorite");
+			LOG.info("START >>> addFavorite");
 			Favorite entity = new Favorite();
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long id = Long.valueOf(subject);
 			User user = users.getReferenceById(id);
 			Movie movie = movies.getReferenceById(inputs.movieId());
@@ -60,7 +58,7 @@ public class FavoriteServiceImpl implements FavoriteService {
 			entity.setUser(user);
 			favorites.save(entity);
 		} finally {
-			LOG.info("--- END <<< addFavorite");
+			LOG.info("END <<< addFavorite");
 		}
 	}
 
@@ -68,44 +66,39 @@ public class FavoriteServiceImpl implements FavoriteService {
 	@Transactional
 	public void deleteFavorite(Long movieId) {
 		try {
-			LOG.info("--- START >>> deleteFavorite");
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			LOG.info("START >>> deleteFavorite");
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long userId = Long.valueOf(subject);
 			Long favoriteId = favorites.findByMovieIdAndUserId(movieId, userId);
 			favorites.deleteById(favoriteId);
 		} finally {
-			LOG.info("--- END <<< deleteFavorite");
+			LOG.info("END <<< deleteFavorite");
 		}
 	}
 
 	@Override
 	public Collection<MovieFavorite> getAllFavorites() {
 		try {
-			LOG.info("--- START >>> getAllFavorites");
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			LOG.info("START >>> getAllFavorites");
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long userId = Long.valueOf(subject);
 			return favorites.findByUserId(userId);
 		} finally {
-			LOG.info("--- END <<< getAllFavorites");
+			LOG.info("END <<< getAllFavorites");
 		}
 	}
 
 	@Override
 	public Collection<MovieForSearch> getAllFavoritesWithDirectors() {
 		try {
-			LOG.info("--- START >>> getAllFavoritesWithDirectors");
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			LOG.info("START >>> getAllFavoritesWithDirectors");
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long userId = Long.valueOf(subject);
-			Collection<MovieFavorite> favoritesList = favorites
-					.findByUserId(userId);
+			Collection<MovieFavorite> favoritesList = favorites.findByUserId(userId);
 			Collection<MovieForSearch> favoriteMoviesWithDirectors = new ArrayList<>();
 			for (MovieFavorite movie : favoritesList) {
 				MovieForSearch favoriteMovie = new MovieForSearch();
-				Set<DirectorDetails> directors = directions
-						.getMovieDirector(movie.getMovieId());
+				Set<DirectorDetails> directors = directions.getMovieDirector(movie.getMovieId());
 				favoriteMovie.setId(movie.getMovieId());
 				favoriteMovie.setTitle(movie.getMovieTitle());
 				favoriteMovie.setReleaseYear(movie.getMovieReleaseYear());
@@ -116,7 +109,7 @@ public class FavoriteServiceImpl implements FavoriteService {
 			}
 			return favoriteMoviesWithDirectors;
 		} finally {
-			LOG.info("--- END <<< getAllFavoritesWithDirectors");
+			LOG.info("END <<< getAllFavoritesWithDirectors");
 		}
 	}
 }

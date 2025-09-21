@@ -42,14 +42,12 @@ public class MovieController {
 
 	@GetMapping("/for-edit")
 	public Page<MovieItem> getAllForEdit(@RequestParam String title,
-			@RequestParam(value = "page") int page,
-			@RequestParam(value = "size") int size) {
+			@RequestParam(value = "page") int page, @RequestParam(value = "size") int size) {
 		return service.getAllMoviesForEdit(title, page, size);
 	}
 
 	@GetMapping("/for-search")
-	public MoviesForSearchAndFavorites getAllForSearch(
-			@RequestParam(value = "page") int page,
+	public MoviesForSearchAndFavorites getAllForSearch(@RequestParam(value = "page") int page,
 			@RequestParam(value = "size") int size) {
 		return service.getAllMoviesForSearch(page, size);
 	}
@@ -79,23 +77,19 @@ public class MovieController {
 
 	@GetMapping("/by-title")
 	public Page<MovieForSearch> searchByTitle(@RequestParam String title,
-			@RequestParam(value = "page") int page,
-			@RequestParam(value = "size") int size) {
+			@RequestParam(value = "page") int page, @RequestParam(value = "size") int size) {
 		return service.searchMovieByTitle(title, page, size);
 	}
 
 	@GetMapping("/by-director")
-	public Page<MovieForSearch> searchByDirectorLastname(
-			@RequestParam String lastname,
-			@RequestParam(value = "page") int page,
-			@RequestParam(value = "size") int size) {
+	public Page<MovieForSearch> searchByDirectorLastname(@RequestParam String lastname,
+			@RequestParam(value = "page") int page, @RequestParam(value = "size") int size) {
 		return service.searchMoviesByDirectorLastname(lastname, page, size);
 	}
 
 	@GetMapping("/by-genre")
 	public Page<MovieForSearch> searchByGenre(@RequestParam String genre,
-			@RequestParam(value = "page") int page,
-			@RequestParam(value = "size") int size) {
+			@RequestParam(value = "page") int page, @RequestParam(value = "size") int size) {
 		return service.searchMoviesByGenre(genre, page, size);
 	}
 

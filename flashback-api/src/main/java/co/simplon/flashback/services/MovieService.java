@@ -37,8 +37,7 @@ public interface MovieService {
 
 	Page<MovieForSearch> searchMovieByTitle(String title, int page, int size);
 
-	Page<MovieForSearch> searchMoviesByDirectorLastname(String lastname, int page,
-			int size);
+	Page<MovieForSearch> searchMoviesByDirectorLastname(String lastname, int page, int size);
 
 	Page<MovieForSearch> searchMoviesByGenre(String genre, int page, int size);
 }

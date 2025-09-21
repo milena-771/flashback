@@ -3,14 +3,11 @@ package co.simplon.flashback.services;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Locale;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.MessageSource;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +20,9 @@ import co.simplon.flashback.dtos.UserItem;
 import co.simplon.flashback.entities.Retrospective;
 import co.simplon.flashback.entities.Role;
 import co.simplon.flashback.entities.User;
-import co.simplon.flashback.errors.FlashbackException;
+import co.simplon.flashback.errors.BadRequestException;
+import co.simplon.flashback.errors.NotFoundException;
+import co.simplon.flashback.errors.UnauthorizedException;
 import co.simplon.flashback.repositories.FavoriteRepository;
 import co.simplon.flashback.repositories.ParticipantRepository;
 import co.simplon.flashback.repositories.ProgramRepository;
@@ -43,8 +42,6 @@ public class UserServiceImpl implements UserService {
 	@Value("${flashback-api.auth.tokenRefreshExp}")
 	private long tokenRefreshExpiration;
 
-	private final MessageSource messageSource;
-
 	private final UserRepository users;
 
 	private final RoleRepository roles;
@@ -59,11 +56,9 @@ public class UserServiceImpl implements UserService {
 
 	private final ProgramRepository containor;
 
-	public UserServiceImpl(UserRepository users, RoleRepository roles,
-			AuthHelper authHelper, FavoriteRepository favorites,
-			ParticipantRepository participants,
-			RetrospectiveRepository retrospectives, ProgramRepository containor,
-			MessageSource messageSource) {
+	public UserServiceImpl(UserRepository users, RoleRepository roles, AuthHelper authHelper,
+			FavoriteRepository favorites, ParticipantRepository participants,
+			RetrospectiveRepository retrospectives, ProgramRepository containor) {
 		this.users = users;
 		this.roles = roles;
 		this.authHelper = authHelper;
@@ -71,7 +66,6 @@ public class UserServiceImpl implements UserService {
 		this.participants = participants;
 		this.retrospectives = retrospectives;
 		this.containor = containor;
-		this.messageSource = messageSource;
 	}
 
 	@Override
@@ -109,19 +103,20 @@ public class UserServiceImpl implements UserService {
 	public TokenRefreshInfo refresh() {
 		try {
 			LOG.info("--- START >>> refresh");
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long userId = Long.valueOf(subject);
-			User user = users.findById(userId).get();
+			User user = users.findById(userId).orElseThrow(() -> {
+				LOG.error("User not found in refresh: {}", userId);
+				return new NotFoundException("USER_NOT_FOUND",
+						"User not found, could not refresh.");
+			});
 			Role userRole = user.getRole();
 			String roleName = userRole.getRoleName();
-			String refreshToken = authHelper.refreshJWT(roleName, subject,
-					tokenRefreshExpiration);
+			String refreshToken = authHelper.refreshJWT(roleName, subject, tokenRefreshExpiration);
 			TokenRefreshInfo tokenInfo = new TokenRefreshInfo();
 			tokenInfo.setToken(refreshToken);
 			tokenInfo.setRole(roleName);
 			tokenInfo.setFirstname(user.getFirstname());
-			LocalDateTime now = LocalDateTime.now();
 			return tokenInfo;
 		} finally {
 			LOG.info("--- END <<< refresh");
@@ -131,13 +126,12 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public TokenInfo signIn(SignIn inputs) {
 		try {
-			LOG.info("--- START >>> signIn");
+			LOG.info("START >>> signIn");
 			String email = inputs.getEmail();
 			String candidate = inputs.getPassword();
 			User user = users.findByEmail(email);
 			if (user != null) {
-				boolean match = authHelper.matches(candidate,
-						user.getPassword());
+				boolean match = authHelper.matches(candidate, user.getPassword());
 				if (match) {
 					String identifier = user.getId().toString();
 					Role userRole = user.getRole();
@@ -149,27 +143,28 @@ public class UserServiceImpl implements UserService {
 					tokenInfo.setFirstname(user.getFirstname());
 					LocalDateTime now = LocalDateTime.now();
 					tokenInfo.setExp(now.plusSeconds(tokenExpiration));
+					LOG.info("User [{}] successfully logged in", user.getId());
 					return tokenInfo;
 				} else {
-					throw new FlashbackException("Wrong credentials",
-							HttpStatus.BAD_REQUEST.name());
+					LOG.error("sign-in with unauthorized credentials");
+					throw new UnauthorizedException("INVALID_CREDENTIALS", "Wrong credentials");
 				}
 			} else {
-				throw new FlashbackException("Wrong credentials",
-						HttpStatus.BAD_REQUEST.name());
+				LOG.error("sign-in with invalid email or password");
+				throw new BadRequestException("INVALID_INPUTS", "email and password are required");
 			}
 		} finally {
-			LOG.info("--- END <<< signIn");
+			LOG.info("END <<< signIn");
 		}
 	}
 
 	@Override
 	public Collection<UserItem> getAllUserItems() {
 		try {
-			LOG.info("--- START >>> getAllUserItems");
+			LOG.info("START >>> getAllUserItems");
 			return users.getAllUsers();
 		} finally {
-			LOG.info("--- END <<< getAllUserItems");
+			LOG.info("END <<< getAllUserItems");
 		}
 	}
 
@@ -177,7 +172,7 @@ public class UserServiceImpl implements UserService {
 	@Transactional
 	public void deleteUser(Long userId) {
 		try {
-			LOG.info("--- START >>> deleteUser");
+			LOG.info("START >>> deleteUser");
 			if (users.existsById(userId)) {
 				favorites.deleteByUserId(userId);
 				if (participants.existsByUserId(userId)) {
@@ -185,8 +180,8 @@ public class UserServiceImpl implements UserService {
 							.findByUserId(userId);
 					participants.deleteByUserId(userId);
 					for (Retrospective retrospective : retroWithUserAsParticipant) {
-						retrospective.setParticipantsNumber(
-								retrospective.getParticipantsNumber() - 1);
+						retrospective
+								.setParticipantsNumber(retrospective.getParticipantsNumber() - 1);
 						retrospectives.save(retrospective);
 					}
 				}
@@ -194,22 +189,19 @@ public class UserServiceImpl implements UserService {
 					Set<Retrospective> retroWithUserAsOrganizer = retrospectives
 							.findByOrganizerId(userId);
 					for (Retrospective retrospective : retroWithUserAsOrganizer) {
-						participants
-								.deleteByRetrospectiveId(retrospective.getId());
-						containor
-								.deleteByRetrospectiveId(retrospective.getId());
+						participants.deleteByRetrospectiveId(retrospective.getId());
+						containor.deleteByRetrospectiveId(retrospective.getId());
 					}
 					retrospectives.deleteByOrganizerId(userId);
 				}
 				users.deleteById(userId);
 			} else {
-				throw new FlashbackException(
-						messageSource.getMessage("error.user.remove.admin",
-								null, Locale.getDefault()),
-						HttpStatus.BAD_REQUEST.name());
+				LOG.error("User not found: {}", userId);
+				throw new NotFoundException("NOT_FOUND_USER",
+						"User not found, deletion could not be completed.");
 			}
 		} finally {
-			LOG.info("--- END <<< deleteUser");
+			LOG.info("END <<< deleteUser");
 		}
 	}
 

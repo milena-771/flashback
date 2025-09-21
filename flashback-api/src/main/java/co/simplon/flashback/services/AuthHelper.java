@@ -30,50 +30,47 @@ public class AuthHelper {
 
 	public String encode(String password) {
 		try {
-			LOG.info("--- START >>> encode");
+			LOG.info("START >>> encode");
 			return encoder.encode(password);
 		} finally {
-			LOG.info("--- END <<< encode");
+			LOG.info("END <<< encode");
 		}
 	}
 
 	public Boolean matches(String candidate, String hash) {
 		try {
-			LOG.info("--- START >>> matches");
+			LOG.info("START >>> matches");
 			return encoder.matches(candidate, hash);
 		} finally {
-			LOG.info("--- END <<< matches");
+			LOG.info("END <<< matches");
 		}
 	}
 
 	public String createJWT(String role, String id) {
 		try {
-			LOG.info("--- START >>> createJWT");
+			LOG.info("START >>> createJWT");
 			Instant now = Instant.now();
 			Instant expirationTime = now.plusSeconds(expiration);
-			var jwt = JWT.create().withIssuer(issuer).withSubject(id)
-					.withIssuedAt(now);
+			var jwt = JWT.create().withIssuer(issuer).withSubject(id).withIssuedAt(now);
 			if (expiration != -1) {
 				jwt = jwt.withExpiresAt(expirationTime);
 			}
 			String createJwt = jwt.withClaim("role", role).sign(algorithm);
 			return createJwt;
 		} finally {
-			LOG.info("--- END <<< createJWT");
+			LOG.info("END <<< createJWT");
 		}
 	}
 
-	public String refreshJWT(String role, String id,
-			Long refreshExpirationTime) {
+	public String refreshJWT(String role, String id, Long refreshExpirationTime) {
 		try {
-			LOG.info("--- START >>> refreshJWT");
+			LOG.info("START >>> refreshJWT");
 			Instant now = Instant.now();
 			Instant expirationTime = now.plusSeconds(refreshExpirationTime);
-			return JWT.create().withIssuer(issuer).withSubject(id)
-					.withIssuedAt(now).withExpiresAt(expirationTime)
-					.withClaim("role", role).sign(algorithm);
+			return JWT.create().withIssuer(issuer).withSubject(id).withIssuedAt(now)
+					.withExpiresAt(expirationTime).withClaim("role", role).sign(algorithm);
 		} finally {
-			LOG.info("--- END <<< refreshJWT");
+			LOG.info("END <<< refreshJWT");
 		}
 	}
 

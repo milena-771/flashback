@@ -4,14 +4,12 @@ package co.simplon.flashback.services;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.context.MessageSource;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.NoSuchMessageException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +36,9 @@ import co.simplon.flashback.entities.Participant;
 import co.simplon.flashback.entities.Program;
 import co.simplon.flashback.entities.Retrospective;
 import co.simplon.flashback.entities.User;
-import co.simplon.flashback.errors.FlashbackException;
+import co.simplon.flashback.errors.ApiException;
+import co.simplon.flashback.errors.ForbiddenException;
+import co.simplon.flashback.errors.NotFoundException;
 import co.simplon.flashback.repositories.DeviceRepository;
 import co.simplon.flashback.repositories.DirectionRepository;
 import co.simplon.flashback.repositories.MovieRepository;
@@ -51,10 +51,7 @@ import co.simplon.flashback.repositories.UserRepository;
 @Transactional(readOnly = true)
 public class RetrospectiveServiceImpl implements RetrospectiveService {
 
-	private final Logger LOG = LogManager
-			.getLogger(RetrospectiveServiceImpl.class);
-
-	private final MessageSource messageSource;
+	private final Logger LOG = LogManager.getLogger(RetrospectiveServiceImpl.class);
 
 	private final RetrospectiveRepository retrospectives;
 
@@ -73,10 +70,9 @@ public class RetrospectiveServiceImpl implements RetrospectiveService {
 	private final FavoriteService favoriteService;
 
 	public RetrospectiveServiceImpl(RetrospectiveRepository retrospectives,
-			DeviceRepository devices, UserRepository users,
-			ProgramRepository containor, MovieRepository movies,
-			ParticipantRepository participants, DirectionRepository direction,
-			FavoriteService favoriteService, MessageSource messageSource) {
+			DeviceRepository devices, UserRepository users, ProgramRepository containor,
+			MovieRepository movies, ParticipantRepository participants,
+			DirectionRepository direction, FavoriteService favoriteService) {
 		this.retrospectives = retrospectives;
 		this.devices = devices;
 		this.users = users;
@@ -85,17 +81,16 @@ public class RetrospectiveServiceImpl implements RetrospectiveService {
 		this.participants = participants;
 		this.direction = direction;
 		this.favoriteService = favoriteService;
-		this.messageSource = messageSource;
 	}
 
 	@Override
 	public Collection<AdminRetroItem> getAllRetrospectives() {
 		try {
-			LOG.info("--- START >>> getAllRetrospectives");
+			LOG.info("START >>> getAllRetrospectives");
 			return retrospectives
 					.findAllProjectedByOrderByStartDateAscEndDateAscRetrospectiveName();
 		} finally {
-			LOG.info("--- END <<< getAllRetrospectives");
+			LOG.info("END <<< getAllRetrospectives");
 		}
 	}
 
@@ -103,10 +98,9 @@ public class RetrospectiveServiceImpl implements RetrospectiveService {
 	@Transactional
 	public void createRetro(RetrospectiveCreate inputs) {
 		try {
-			LOG.info("--- START >>> createRetro");
+			LOG.info("START >>> createRetro");
 			Retrospective entity = new Retrospective();
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long id = Long.valueOf(subject);
 			User user = users.getReferenceById(id);
 			Device device = devices.getReferenceById(inputs.deviceId());
@@ -127,33 +121,37 @@ public class RetrospectiveServiceImpl implements RetrospectiveService {
 				containor.save(retrospectiveContain);
 			}
 		} finally {
-			LOG.info("--- END <<< createRetro");
+			LOG.info("END <<< createRetro");
 		}
 	}
 
 	@Override
 	@Transactional
-	public void deleteRetroByOrganizer(Long retrospectiveId) {
+	public void deleteRetroByOrganizer(Long retrospectiveId)
+			throws NoSuchMessageException, ApiException {
 		try {
-			LOG.info("--- START >>> deleteRetroByOrganizer");
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			LOG.info("START >>> deleteRetroByOrganizer");
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long userId = Long.valueOf(subject);
-			Retrospective retrospective = retrospectives
-					.findById(retrospectiveId).get();
+			Retrospective retrospective = retrospectives.findById(retrospectiveId)
+					.orElseThrow(() -> {
+						LOG.error("Retrospective not found in deleteRetroByOrganizer: {}",
+								retrospectiveId);
+						return new NotFoundException("RETROSPECTIVE_NOT_FOUND",
+								"Retrospective not found: " + retrospectiveId);
+					});
 			if (userId == retrospective.getOrganizer().getId()) {
 				containor.deleteByRetrospectiveId(retrospectiveId);
 				participants.deleteByRetrospectiveId(retrospectiveId);
 				retrospectives.deleteById(retrospectiveId);
 			} else {
-				throw new FlashbackException(
-						messageSource.getMessage(
-								"error.retrospective.wrong.organizer", null,
-								Locale.getDefault()),
-						HttpStatus.BAD_REQUEST.name());
+				LOG.error("User {} is not the organizer of this retrospective {}", userId,
+						retrospectiveId);
+				throw new ForbiddenException("NOT_ORGANIZER",
+						"Only the organizer can delete this retrospective.");
 			}
 		} finally {
-			LOG.info("--- END <<< deleteRetroByOrganizer");
+			LOG.info("END <<< deleteRetroByOrganizer");
 		}
 	}
 
@@ -161,20 +159,18 @@ public class RetrospectiveServiceImpl implements RetrospectiveService {
 	@Transactional
 	public void deleteRetrospectiveByAdmin(Long retrospectiveId) {
 		try {
-			LOG.info("--- START >>> deleteRetrospectiveByAdmin");
+			LOG.info("START >>> deleteRetrospectiveByAdmin");
 			if (retrospectives.existsById(retrospectiveId)) {
 				containor.deleteByRetrospectiveId(retrospectiveId);
 				participants.deleteByRetrospectiveId(retrospectiveId);
 				retrospectives.deleteById(retrospectiveId);
 			} else {
-				throw new FlashbackException(
-						messageSource.getMessage(
-								"error.retrospective.remove.admin", null,
-								Locale.getDefault()),
-						HttpStatus.INTERNAL_SERVER_ERROR.name());
+				LOG.error("Retrospective not found: {}", retrospectiveId);
+				throw new NotFoundException("RETROSPECTIVE_NOT_FOUND",
+						"Retrospective not found, deletion could not be completed.");
 			}
 		} finally {
-			LOG.info("--- END <<< deleteRetrospectiveByAdmin");
+			LOG.info("END <<< deleteRetrospectiveByAdmin");
 		}
 	}
 
@@ -182,33 +178,34 @@ public class RetrospectiveServiceImpl implements RetrospectiveService {
 	public FavoriteAndLabelsAndRetroDetailsForUpdate getRetroDetailsForUpdate(
 			Long retrospectiveId) {
 		try {
-			LOG.info("--- START >>> getRetroDetailsForUpdate");
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			LOG.info("START >>> getRetroDetailsForUpdate");
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long userId = Long.valueOf(subject);
-			Retrospective retrospective = retrospectives
-					.findById(retrospectiveId).get();
+			Retrospective retrospective = retrospectives.findById(retrospectiveId)
+					.orElseThrow(() -> {
+						LOG.error("Retrospective not found in getRetroDetailsForUpdate: {}",
+								retrospectiveId);
+						return new NotFoundException("RETROSPECTIVE_NOT_FOUND",
+								"Retrospective not found, could not access to this retrospective.");
+					});
 			if (userId == retrospective.getOrganizer().getId()) {
 				FavoriteAndLabelsAndRetroDetailsForUpdate detailsForUpdate = new FavoriteAndLabelsAndRetroDetailsForUpdate();
 				Collection<MovieForSearch> favorites = favoriteService
 						.getAllFavoritesWithDirectors();
-				Collection<DeviceDetails> labels = devices
-						.findAllProjectedByOrderByDeviceName();
-				OrgaRetroForUpdate retroDetails = getOrgaRetroDetails(
-						retrospectiveId);
+				Collection<DeviceDetails> labels = devices.findAllProjectedByOrderByDeviceName();
+				OrgaRetroForUpdate retroDetails = getOrgaRetroDetails(retrospectiveId);
 				detailsForUpdate.setDevices(labels);
 				detailsForUpdate.setFavorites(favorites);
 				detailsForUpdate.setRetroDetails(retroDetails);
 				return detailsForUpdate;
 			} else {
-				throw new FlashbackException(
-						messageSource.getMessage(
-								"error.retrospective.wrong.organizer", null,
-								Locale.getDefault()),
-						HttpStatus.BAD_REQUEST.name());
+				LOG.error("User {} is not the organizer of this retrospective {}", userId,
+						retrospectiveId);
+				throw new ForbiddenException("NOT_ORGANIZER",
+						"Only the organizer can update this retrospective.");
 			}
 		} finally {
-			LOG.info("--- END <<< getRetroDetailsForUpdate");
+			LOG.info("END <<< getRetroDetailsForUpdate");
 		}
 	}
 
@@ -216,12 +213,14 @@ public class RetrospectiveServiceImpl implements RetrospectiveService {
 	@Transactional
 	public void updateRetro(Long retrospectiveId, RetrospectiveUpdate inputs) {
 		try {
-			LOG.info("--- START >>> updateRetro");
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			LOG.info("START >>> updateRetro");
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long userId = Long.valueOf(subject);
-			Retrospective entity = retrospectives.findById(retrospectiveId)
-					.get();
+			Retrospective entity = retrospectives.findById(retrospectiveId).orElseThrow(() -> {
+				LOG.error("Retrospective not found in updateRetro: {}", retrospectiveId);
+				return new NotFoundException("RETROSPECTIVE_NOT_FOUND",
+						"Retrospective not found, update could not be completed.");
+			});
 			if (userId == entity.getOrganizer().getId()) {
 				entity.setRetrospectiveName(inputs.retrospectiveName());
 				entity.setStartDate(inputs.startDate());
@@ -233,9 +232,8 @@ public class RetrospectiveServiceImpl implements RetrospectiveService {
 				retrospectives.save(entity);
 				containor.deleteByRetrospectiveId(retrospectiveId);
 				for (Long movieId : inputs.movieId()) {
-					Program updateContainor = containor
-							.findByMovieIdAndRetrospectiveId(movieId,
-									retrospectiveId);
+					Program updateContainor = containor.findByMovieIdAndRetrospectiveId(movieId,
+							retrospectiveId);
 					Program retrospectiveContain = new Program();
 					Movie movie = movies.getReferenceById(movieId);
 					retrospectiveContain.setMovie(movie);
@@ -243,69 +241,65 @@ public class RetrospectiveServiceImpl implements RetrospectiveService {
 					containor.save(retrospectiveContain);
 				}
 			} else {
-				throw new FlashbackException(
-						messageSource.getMessage(
-								"error.retrospective.wrong.organizer", null,
-								Locale.getDefault()),
-						HttpStatus.BAD_REQUEST.name());
+				LOG.error("User {} is not the organizer of this retrospective {}", userId,
+						retrospectiveId);
+				throw new ForbiddenException("NOT_ORGANIZER",
+						"Only the organizer can update this retrospective.");
 			}
 		} finally {
-			LOG.info("--- END <<< updateRetro");
+			LOG.info("END <<< updateRetro");
 		}
 	}
 
 	@Override
-	public Optional<Long> existsByRetrospectiveNameForUpdate(
-			RetrospectiveUpdate inputs) {
+	public Optional<Long> existsByRetrospectiveNameForUpdate(RetrospectiveUpdate inputs) {
 		try {
-			LOG.info("--- START >>> existsByRetrospectiveNameForUpdate");
-			return retrospectives.existsByRetrospectiveNameForUpdate(
-					inputs.retrospectiveName(), inputs.id());
+			LOG.info("START >>> existsByRetrospectiveNameForUpdate");
+			return retrospectives.existsByRetrospectiveNameForUpdate(inputs.retrospectiveName(),
+					inputs.id());
 		} finally {
-			LOG.info("--- END <<< existsByRetrospectiveNameForUpdate");
+			LOG.info("END <<< existsByRetrospectiveNameForUpdate");
 		}
 	}
 
 	@Override
 	public Boolean existsByRetroName(String name) {
 		try {
-			LOG.info("--- START >>> existsByRetroName");
+			LOG.info("START >>> existsByRetroName");
 			return retrospectives.existsByRetrospectiveName(name);
 		} finally {
-			LOG.info("--- END <<< existsByRetroName");
+			LOG.info("END <<< existsByRetroName");
 		}
 	}
 
 	@Override
 	public Collection<DeviceDetails> getAllDeviceLabels() {
 		try {
-			LOG.info("--- START >>> getAllDeviceLabels");
-			Collection<DeviceDetails> labels = devices
-					.findAllProjectedByOrderByDeviceName();
+			LOG.info("START >>> getAllDeviceLabels");
+			Collection<DeviceDetails> labels = devices.findAllProjectedByOrderByDeviceName();
 			return labels;
 		} finally {
-			LOG.info("--- END <<< getAllDeviceLabels");
+			LOG.info("END <<< getAllDeviceLabels");
 		}
 	}
 
 	@Override
 	public RetroItemsAsOrgaAndParticipant getAllRetroAsOrgaAndParticipant() {
 		try {
-			LOG.info("--- START >>> getAllRetroAsOrgaAndParticipant");
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			LOG.info("START >>> getAllRetroAsOrgaAndParticipant");
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long userId = Long.valueOf(subject);
 			RetroItemsAsOrgaAndParticipant allRetros = new RetroItemsAsOrgaAndParticipant();
 			LocalDate today = LocalDate.now();
-			Collection<RetroItem> retroByOrga = retrospectives
-					.findRetroByOrganizerAndByDate(userId, today);
-			Collection<RetroItem> retroByParticipant = participants
-					.findByUserIdAndDate(userId, today);
+			Collection<RetroItem> retroByOrga = retrospectives.findRetroByOrganizerAndByDate(userId,
+					today);
+			Collection<RetroItem> retroByParticipant = participants.findByUserIdAndDate(userId,
+					today);
 			allRetros.setRetroByOrga(retroByOrga);
 			allRetros.setRetroByParticipant(retroByParticipant);
 			return allRetros;
 		} finally {
-			LOG.info("--- END <<< getAllRetroAsOrgaAndParticipant");
+			LOG.info("END <<< getAllRetroAsOrgaAndParticipant");
 		}
 	}
 
@@ -313,23 +307,22 @@ public class RetrospectiveServiceImpl implements RetrospectiveService {
 	public Collection<RetroItem> getAllRetroToCome() {
 		try {
 			LOG.info("--- START >>> getAllRetroToCome");
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long userId = Long.valueOf(subject);
 			LocalDate today = LocalDate.now();
 			Collection<RetroItem> allRetros = new HashSet<>();
 			Collection<RetroItem> retroExcludeAsOrganizerAndZeroParticipant = retrospectives
 					.findRetroToCome(userId, today);
 			for (RetroItem retro : retroExcludeAsOrganizerAndZeroParticipant) {
-				Optional<Long> isParticipant = participants
-						.existsByUserIdAndRetroId(retro.getId(), userId);
+				Optional<Long> isParticipant = participants.existsByUserIdAndRetroId(retro.getId(),
+						userId);
 				if (!isParticipant.isPresent()) {
 					allRetros.add(retro);
 				}
 			}
 			return allRetros;
 		} finally {
-			LOG.info("--- END <<< getAllRetroToCome");
+			LOG.info("END <<< getAllRetroToCome");
 		}
 	}
 
@@ -337,33 +330,34 @@ public class RetrospectiveServiceImpl implements RetrospectiveService {
 	@Transactional
 	public void addParticipant(Long retrospectiveId) {
 		try {
-			LOG.info("--- START >>> addParticipant");
+			LOG.info("START >>> addParticipant");
 			Participant entity = new Participant();
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long userId = Long.valueOf(subject);
 			User user = users.findProjectedById(userId);
-			Retrospective retrospective = retrospectives
-					.findById(retrospectiveId).get();
-			Optional<Long> participantId = participants
-					.existsByUserIdAndRetroId(retrospectiveId, userId);
-			if (!participantId.isPresent()
-					&& (retrospective.getOrganizer() != user)) {
-				retrospective.setParticipantsNumber(
-						retrospective.getParticipantsNumber() + 1);
+			Retrospective retrospective = retrospectives.findById(retrospectiveId)
+					.orElseThrow(() -> {
+						LOG.error("Retrospective not found in addParticipant: {}", retrospectiveId);
+						return new NotFoundException("RETROSPECTIVE_NOT_FOUND",
+								"Retrospective not found: " + retrospectiveId);
+					});
+			Optional<Long> participantId = participants.existsByUserIdAndRetroId(retrospectiveId,
+					userId);
+			if (!participantId.isPresent() && (retrospective.getOrganizer() != user)) {
+				retrospective.setParticipantsNumber(retrospective.getParticipantsNumber() + 1);
 				retrospectives.save(retrospective);
 				entity.setUser(user);
 				entity.setRetrospective(retrospective);
 				participants.save(entity);
 			} else {
-				throw new FlashbackException(
-						messageSource.getMessage(
-								"error.retrospective.add.participant", null,
-								Locale.getDefault()),
-						HttpStatus.BAD_REQUEST.name());
+				LOG.error(
+						"User {} is already a participant or the organizer of this retrospective {}",
+						userId, retrospectiveId);
+				throw new ForbiddenException("DUPLICATE_PARTICIPANT",
+						"User already participant or organizer of this retrospective.");
 			}
 		} finally {
-			LOG.info("--- END <<< addParticipant");
+			LOG.info("END <<< addParticipant");
 		}
 	}
 
@@ -371,68 +365,68 @@ public class RetrospectiveServiceImpl implements RetrospectiveService {
 	@Transactional
 	public void removeParticipant(Long retrospectiveId) {
 		try {
-			LOG.info("--- START >>> removeParticipant");
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			LOG.info("START >>> removeParticipant");
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long userId = Long.valueOf(subject);
 			User user = users.findProjectedById(userId);
-			Retrospective retrospective = retrospectives
-					.findById(retrospectiveId).get();
-			Optional<Long> isParticipantId = participants
-					.existsByUserIdAndRetroId(retrospectiveId, userId);
-			if (isParticipantId.isPresent()
-					&& (retrospective.getOrganizer() != user)) {
-				Long participationId = participants
-						.findByUserIdAndRetroId(retrospectiveId, userId);
-				retrospective.setParticipantsNumber(
-						retrospective.getParticipantsNumber() - 1);
+			Retrospective retrospective = retrospectives.findById(retrospectiveId)
+					.orElseThrow(() -> {
+						LOG.error("Retrospective not found in removeParticipant: {}",
+								retrospectiveId);
+						return new NotFoundException("RETROSPECTIVE_NOT_FOUND",
+								"Retrospective not found, participant could not be removed from this retrospective.");
+					});
+			Optional<Long> isParticipantId = participants.existsByUserIdAndRetroId(retrospectiveId,
+					userId);
+			if (isParticipantId.isPresent() && (retrospective.getOrganizer() != user)) {
+				Long participationId = participants.findByUserIdAndRetroId(retrospectiveId, userId);
+				retrospective.setParticipantsNumber(retrospective.getParticipantsNumber() - 1);
 				retrospectives.save(retrospective);
 				participants.deleteById(participationId);
 			} else {
-				throw new FlashbackException(
-						messageSource.getMessage(
-								"error.retrospective.remove.participant", null,
-								Locale.getDefault()),
-						HttpStatus.BAD_REQUEST.name());
+				LOG.error(
+						"User {} is not a participant or is the organizer of this retrospective {}",
+						userId, retrospectiveId);
+				throw new ForbiddenException("NOT_PARTICIPANT",
+						"User is not participant or is the organizer of this retrospective.");
 			}
 		} finally {
-			LOG.info("--- END <<< removeParticipant");
+			LOG.info("END <<< removeParticipant");
 		}
 	}
 
 	@Override
 	public OrgaRetroForUpdate getOrgaRetroDetails(Long retrospectiveId) {
 		try {
-			LOG.info("--- START >>> getOrgaRetroDetails");
-			Retrospective retrospective = retrospectives
-					.findById(retrospectiveId).get();
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			LOG.info("START >>> getOrgaRetroDetails");
+			Retrospective retrospective = retrospectives.findById(retrospectiveId)
+					.orElseThrow(() -> {
+						LOG.error("Retrospective not found in getOrgaRetroDetails: {}",
+								retrospectiveId);
+						return new NotFoundException("RETROSPECTIVE_NOT_FOUND",
+								"Retrospective not found, could not access to this retrospective.");
+					});
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long userId = Long.valueOf(subject);
 			if (retrospective.getOrganizer().getId() == userId) {
 				OrgaRetroForUpdate retroDetailsWithMovies = new OrgaRetroForUpdate();
 				Set<MovieForSearch> moviesToWatch = new HashSet<>();
 				RetroDetailsForUpdate retroDetails = new RetroDetailsForUpdate();
-				retroDetails.setRetrospectiveName(
-						retrospective.getRetrospectiveName());
+				retroDetails.setRetrospectiveName(retrospective.getRetrospectiveName());
 				retroDetails.setStartDate(retrospective.getStartDate());
 				retroDetails.setEndDate(retrospective.getEndDate());
 				retroDetails.setDescription(retrospective.getDescription());
 				retroDetails.setDevice(retrospective.getDevice());
-				retroDetails.setDeviceName(
-						retrospective.getDevice().getDeviceName());
-				retroDetails.setParticipantsNumber(
-						retrospective.getParticipantsNumber());
-				Set<MovieItem> moviesList = containor
-						.findByRetrospectiveId(retrospectiveId);
+				retroDetails.setDeviceName(retrospective.getDevice().getDeviceName());
+				retroDetails.setParticipantsNumber(retrospective.getParticipantsNumber());
+				Set<MovieItem> moviesList = containor.findByRetrospectiveId(retrospectiveId);
 				for (MovieItem movie : moviesList) {
 					MovieForSearch movieDetails = new MovieForSearch();
 					movieDetails.setId(movie.getId());
 					movieDetails.setTitle(movie.getTitle());
 					movieDetails.setPoster(movie.getPoster());
 					movieDetails.setReleaseYear(movie.getReleaseYear());
-					Set<DirectorDetails> directorList = direction
-							.getMovieDirector(movie.getId());
+					Set<DirectorDetails> directorList = direction.getMovieDirector(movie.getId());
 					movieDetails.setDirectors(directorList);
 					moviesToWatch.add(movieDetails);
 				}
@@ -440,158 +434,146 @@ public class RetrospectiveServiceImpl implements RetrospectiveService {
 				retroDetailsWithMovies.setRetroDetails(retroDetails);
 				return retroDetailsWithMovies;
 			} else {
-				throw new FlashbackException(
-						messageSource.getMessage(
-								"error.retrospective.wrong.organizer", null,
-								Locale.getDefault()),
-						HttpStatus.INTERNAL_SERVER_ERROR.name());
+				LOG.error("User {} is not the organizer of this retrospective {}", userId,
+						retrospectiveId);
+				throw new ForbiddenException("NOT_ORGANIZER",
+						"Only the organizer can have access to this retrospective.");
 			}
 		} finally {
-			LOG.info("--- END <<< getOrgaRetroDetails");
+			LOG.info("END <<< getOrgaRetroDetails");
 		}
 	}
 
 	@Override
-	public ParticipantRetroForUpdate getParticipantRetroDetails(
-			Long retrospectiveId) {
+	public ParticipantRetroForUpdate getParticipantRetroDetails(Long retrospectiveId) {
 		try {
-			LOG.info("--- START >>> getParticipantRetroDetails");
-			Retrospective retrospective = retrospectives
-					.findById(retrospectiveId).get();
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			LOG.info("START >>> getParticipantRetroDetails");
+			Retrospective retrospective = retrospectives.findById(retrospectiveId)
+					.orElseThrow(() -> {
+						LOG.error("Retrospective not found in getParticipantRetroDetails: {}",
+								retrospectiveId);
+						return new NotFoundException("RETROSPECTIVE_NOT_FOUND",
+								"Retrospective not found, could not access to this retrospective.");
+					});
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long userId = Long.valueOf(subject);
-			Optional<Long> participantId = participants
-					.existsByUserIdAndRetroId(retrospectiveId, userId);
+			Optional<Long> participantId = participants.existsByUserIdAndRetroId(retrospectiveId,
+					userId);
 			if (participantId.isPresent()) {
 				ParticipantRetroForUpdate retroDetailsWithMovies = new ParticipantRetroForUpdate();
 				ParticipantRetroDetails retroDetailsAsParticipant = new ParticipantRetroDetails();
 				Set<MovieForSearch> moviesToWatch = new HashSet<>();
-				retroDetailsAsParticipant.setRetrospectiveName(
-						retrospective.getRetrospectiveName());
 				retroDetailsAsParticipant
-						.setStartDate(retrospective.getStartDate());
-				retroDetailsAsParticipant
-						.setEndDate(retrospective.getEndDate());
-				retroDetailsAsParticipant
-						.setDescription(retrospective.getDescription());
-				retroDetailsAsParticipant.setDeviceName(
-						retrospective.getDevice().getDeviceName());
-				Set<MovieItem> moviesList = containor
-						.findByRetrospectiveId(retrospectiveId);
+						.setRetrospectiveName(retrospective.getRetrospectiveName());
+				retroDetailsAsParticipant.setStartDate(retrospective.getStartDate());
+				retroDetailsAsParticipant.setEndDate(retrospective.getEndDate());
+				retroDetailsAsParticipant.setDescription(retrospective.getDescription());
+				retroDetailsAsParticipant.setDeviceName(retrospective.getDevice().getDeviceName());
+				Set<MovieItem> moviesList = containor.findByRetrospectiveId(retrospectiveId);
 				for (MovieItem movie : moviesList) {
 					MovieForSearch movieDetails = new MovieForSearch();
 					movieDetails.setId(movie.getId());
 					movieDetails.setTitle(movie.getTitle());
 					movieDetails.setPoster(movie.getPoster());
 					movieDetails.setReleaseYear(movie.getReleaseYear());
-					Set<DirectorDetails> directorList = direction
-							.getMovieDirector(movie.getId());
+					Set<DirectorDetails> directorList = direction.getMovieDirector(movie.getId());
 					movieDetails.setDirectors(directorList);
 					moviesToWatch.add(movieDetails);
 				}
 				retroDetailsWithMovies.setMovieDetails(moviesToWatch);
-				retroDetailsWithMovies
-						.setRetroDetails(retroDetailsAsParticipant);
+				retroDetailsWithMovies.setRetroDetails(retroDetailsAsParticipant);
 				return retroDetailsWithMovies;
 			} else {
-				throw new FlashbackException(
-						messageSource.getMessage(
-								"error.retrospective.wrong.participant", null,
-								Locale.getDefault()),
-						HttpStatus.INTERNAL_SERVER_ERROR.name());
+				LOG.error("User {} is not a participant of this retrospective {}", userId,
+						retrospectiveId);
+				throw new ForbiddenException("NOT_PARTICIPANT",
+						"Only participants can have access to this retrospective.");
 			}
 		} finally {
-			LOG.info("--- END <<< getParticipantRetroDetails");
+			LOG.info("END <<< getParticipantRetroDetails");
 		}
 	}
 
 	@Override
-	public ParticipantRetroForUpdate getRetroToComeDetails(
-			Long retrospectiveId) {
+	public ParticipantRetroForUpdate getRetroToComeDetails(Long retrospectiveId) {
 		try {
-			LOG.info("--- START >>> getRetroToComeDetails");
-			Retrospective retrospective = retrospectives
-					.findById(retrospectiveId).get();
-			String subject = SecurityContextHolder.getContext()
-					.getAuthentication().getName();
+			LOG.info("START >>> getRetroToComeDetails");
+			Retrospective retrospective = retrospectives.findById(retrospectiveId)
+					.orElseThrow(() -> {
+						LOG.error("Retrospective not found in getRetroToComeDetails: {}",
+								retrospectiveId);
+						return new NotFoundException("RETROSPECTIVE_NOT_FOUND",
+								"Retrospective not found, could not access to this retrospective.");
+					});
+			String subject = SecurityContextHolder.getContext().getAuthentication().getName();
 			Long userId = Long.valueOf(subject);
-			Optional<Long> participantId = participants
-					.existsByUserIdAndRetroId(retrospectiveId, userId);
-			if (!participantId.isPresent()
-					&& (userId != retrospective.getOrganizer().getId())) {
+			Optional<Long> participantId = participants.existsByUserIdAndRetroId(retrospectiveId,
+					userId);
+			if (!participantId.isPresent() && (userId != retrospective.getOrganizer().getId())) {
 				ParticipantRetroForUpdate retroDetailsWithMovies = new ParticipantRetroForUpdate();
 				ParticipantRetroDetails retroDetailsAsParticipant = new ParticipantRetroDetails();
 				Set<MovieForSearch> moviesToWatch = new HashSet<>();
-				retroDetailsAsParticipant.setRetrospectiveName(
-						retrospective.getRetrospectiveName());
 				retroDetailsAsParticipant
-						.setStartDate(retrospective.getStartDate());
-				retroDetailsAsParticipant
-						.setEndDate(retrospective.getEndDate());
-				retroDetailsAsParticipant
-						.setDescription(retrospective.getDescription());
-				retroDetailsAsParticipant.setDeviceName(
-						retrospective.getDevice().getDeviceName());
-				Set<MovieItem> moviesList = containor
-						.findByRetrospectiveId(retrospectiveId);
+						.setRetrospectiveName(retrospective.getRetrospectiveName());
+				retroDetailsAsParticipant.setStartDate(retrospective.getStartDate());
+				retroDetailsAsParticipant.setEndDate(retrospective.getEndDate());
+				retroDetailsAsParticipant.setDescription(retrospective.getDescription());
+				retroDetailsAsParticipant.setDeviceName(retrospective.getDevice().getDeviceName());
+				Set<MovieItem> moviesList = containor.findByRetrospectiveId(retrospectiveId);
 				for (MovieItem movie : moviesList) {
 					MovieForSearch movieDetails = new MovieForSearch();
 					movieDetails.setId(movie.getId());
 					movieDetails.setTitle(movie.getTitle());
 					movieDetails.setPoster(movie.getPoster());
 					movieDetails.setReleaseYear(movie.getReleaseYear());
-					Set<DirectorDetails> directorList = direction
-							.getMovieDirector(movie.getId());
+					Set<DirectorDetails> directorList = direction.getMovieDirector(movie.getId());
 					movieDetails.setDirectors(directorList);
 					moviesToWatch.add(movieDetails);
 				}
 				retroDetailsWithMovies.setMovieDetails(moviesToWatch);
-				retroDetailsWithMovies
-						.setRetroDetails(retroDetailsAsParticipant);
+				retroDetailsWithMovies.setRetroDetails(retroDetailsAsParticipant);
 				return retroDetailsWithMovies;
 			} else {
-				throw new FlashbackException(
-						messageSource.getMessage(
-								"error.retrospective.details.toCome", null,
-								Locale.getDefault()),
-						HttpStatus.INTERNAL_SERVER_ERROR.name());
+				LOG.error(
+						"User {} is already a participant or the organizer of this retrospective {}",
+						userId, retrospectiveId);
+				throw new ForbiddenException("NOT_PARTICIPANT",
+						"User already participant or organizer of this retrospective.");
 			}
 		} finally {
-			LOG.info("--- END <<< getRetroToComeDetails");
+			LOG.info("END <<< getRetroToComeDetails");
 		}
 	}
 
 	@Override
-	public AdminRetroDetailsWithMovies getAdminRetroDetails(
-			Long retrospectiveId) {
+	public AdminRetroDetailsWithMovies getAdminRetroDetails(Long retrospectiveId) {
 		try {
-			LOG.info("--- START >>> getAdminRetroDetails");
-			Retrospective retrospective = retrospectives
-					.findById(retrospectiveId).get();
+			LOG.info("START >>> getAdminRetroDetails");
+			Retrospective retrospective = retrospectives.findById(retrospectiveId)
+					.orElseThrow(() -> {
+						LOG.error("Retrospective not found in getRetroToComeDetails: {}",
+								retrospectiveId);
+						return new NotFoundException("RETROSPECTIVE_NOT_FOUND",
+								"Retrospective not found, could not access to this retrospective.");
+					});
 			AdminRetroDetailsWithMovies retroAndMovies = new AdminRetroDetailsWithMovies();
 			AdminRetroDetails retroDetails = new AdminRetroDetails();
 			Set<MovieForSearch> moviesToWatch = new HashSet<>();
-			retroDetails.setRestrospectiveName(
-					retrospective.getRetrospectiveName());
+			retroDetails.setRestrospectiveName(retrospective.getRetrospectiveName());
 			retroDetails.setStartDate(retrospective.getStartDate());
 			retroDetails.setEndDate(retrospective.getEndDate());
 			retroDetails.setDescription(retrospective.getDescription());
-			retroDetails
-					.setDeviceName(retrospective.getDevice().getDeviceName());
-			retroDetails.setParticipantsNumber(
-					retrospective.getParticipantsNumber());
+			retroDetails.setDeviceName(retrospective.getDevice().getDeviceName());
+			retroDetails.setParticipantsNumber(retrospective.getParticipantsNumber());
 			retroDetails.setUserEmail(retrospective.getOrganizer().getEmail());
-			Set<MovieItem> moviesList = containor
-					.findByRetrospectiveId(retrospectiveId);
+			Set<MovieItem> moviesList = containor.findByRetrospectiveId(retrospectiveId);
 			for (MovieItem movie : moviesList) {
 				MovieForSearch movieDetails = new MovieForSearch();
 				movieDetails.setId(movie.getId());
 				movieDetails.setTitle(movie.getTitle());
 				movieDetails.setPoster(movie.getPoster());
 				movieDetails.setReleaseYear(movie.getReleaseYear());
-				Set<DirectorDetails> directorList = direction
-						.getMovieDirector(movie.getId());
+				Set<DirectorDetails> directorList = direction.getMovieDirector(movie.getId());
 				movieDetails.setDirectors(directorList);
 				moviesToWatch.add(movieDetails);
 			}
@@ -599,7 +581,7 @@ public class RetrospectiveServiceImpl implements RetrospectiveService {
 			retroAndMovies.setRetroDetails(retroDetails);
 			return retroAndMovies;
 		} finally {
-			LOG.info("--- END <<< getAdminRetroDetails");
+			LOG.info("END <<< getAdminRetroDetails");
 		}
 	}
 

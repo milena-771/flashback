@@ -28,13 +28,13 @@ export default {
                     this.$router.push('/search');                  
                 }
             }catch(error){
-                if(error.response.status === 400){
+                if(error.response.status === 400 || error.response.status === 401){
                     this.wrongCredentials = true;
                 }
                 /**
                  * If inputs = null
                  */
-                if(error.response.status === 415){
+                if(error.response.status === 415 || error.response.status === 500){
                     window.scrollTo(0,0);
                     this.$toast.error('toast-global',  this.$i18n.t("toast.signIn.error"));
                 }
