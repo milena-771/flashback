@@ -29,7 +29,7 @@ export default {
                 }
             }catch(error){
                 if(error.response.status === 400){
-                    this.wrongCredentials = true;
+                    this.wrongCredentials = true; 
                 }
                 /**
                  * If inputs = null
